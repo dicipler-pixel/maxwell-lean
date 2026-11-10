@@ -24,7 +24,16 @@ import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
   suppose it to be zero everywhere, `J` will also be zero everywhere" (`J = div 𝔄`).
 
 What is proved is exactly that: a gradient added to `𝔄` changes neither `curl 𝔄` nor the
-momentum of a closed circuit. Maxwell's *choice* `χ = 0` (`div 𝔄 = 0`) is a choice, and the full
+momentum of a closed circuit. The theorems hold for *any* `C²` (resp. differentiable) `χ`, which is
+more general than Maxwell's: his `χ` is the specific function `χ = (1/4π)∭ J/r` built in Art. 616,
+eqs. (5)–(7) (his `J = div 𝔄`, eq. (2), not the current).
+
+"Momentum" here is in the Lagrangian (generalized) sense of Arts. 578, 604 and 634: the currents are
+velocities of a dynamical system and `∮𝔄·ds` is the momentum conjugate to the current. `circuitMomentum`
+is only the line-integral; its two defining properties are stated in `Maxwell.Statements`: the
+impulse of Art. 590 as a target (`Art590Impulse`), and `T = ½∑ p i` of Art. 634 as the shape
+of the claim (`Art634KineticEnergy`), not yet a closed target. Maxwell's *choice* `χ = 0`
+(`div 𝔄 = 0`) is a choice, and the full
 later gauge transformation of the pair `(𝔄, Ψ)` is not his statement and is not formalized as his.
 
 This is **not** a field momentum density (no `D × H/4πc`); see `Maxwell.Sources.art549` and

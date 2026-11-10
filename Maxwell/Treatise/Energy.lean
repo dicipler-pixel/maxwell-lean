@@ -10,18 +10,28 @@ Art. 630 (p. 246): "THE energy of the system may be divided into the Potential E
 Kinetic Energy." Maxwell's assignment is kept, and is the **reverse** of the later Lagrangian
 bookkeeping in which `½E²` is the kinetic-like term and `B²` the potential-like term:
 
-* electric energy is **potential**; it "resides in every part of the field where electrical force
-  and electrical displacement occur" (Art. 631, p. 247), "half the product of the electromotive
-  force and the electric displacement, multiplied by the cosine of the angle which these vectors
-  include" — `½ E·D`;
+* electric energy is **potential**, "half the product of the electromotive force and the
+  electric displacement, multiplied by the cosine of the angle which these vectors include" —
+  `½ E·D` (Art. 631, p. 247). Art. 631's claim is about **totals** and is conditional: "the
+  electrostatic energy of the whole field will be the same *if we suppose* that it resides in every
+  part of the field where electrical force and electrical displacement occur, instead of being
+  confined to the places where free electricity is found" (`Maxwell.Sources.art631`);
 * magnetic (electrokinetic) energy is **kinetic**, `(1/8π) B·H` per unit volume, and "this
   energy exists in the form of some kind of motion of the matter in every portion of space"
   (Art. 636, p. 249). The "some kind of motion" clause is Maxwell's hypothesis (he points ahead
   to Art. 821); it is recorded in `Maxwell.Sources.art636`, not proved.
 
+Where Maxwell *locates* the energy, he does so elsewhere: literally in 1865, § 74 ("On our theory
+it resides in the electromagnetic field", `Maxwell.Sources.dyn1865_s74`; with § 73's "illustrative,
+not as explanatory" for the mechanical words, `dyn1865_s73`), as a hypothesis in Art. 636 ("According
+to our hypothesis, we assume the kinetic energy to exist wherever there is magnetic force"), and in
+1873 vol. I, Art. 111 ("A dielectric medium, when thus polarized, is the seat of electrical energy",
+`Maxwell.Sources.art111_energy`).
+
 Only the *densities* are defined here. That the two volume integrals equal the old expressions
-`½∑eΨ` (Art. 631) and `½∑pi` (Arts. 634–635) is stated in `Maxwell.Statements`; that the energy
-is *literally* located there (1865, §74) is a physical claim no integral identity can prove.
+`½∑eΨ` (Art. 631) and `½∑pi` (Arts. 634–635) is stated in `Maxwell.Statements`; equal totals do
+not locate the energy, and the location claims above are physical claims no integral identity can
+prove.
 
 Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt`.
 -/

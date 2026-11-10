@@ -23,7 +23,11 @@ Magnetism* (1st ed. 1873; 2nd ed. 1881). No physical claim is made in this file.
   surface on which the stress is supposed to act is parallel to the axis of h, and the second
   suffix, k, indicates that the direction of the stress with which the part of the body on the
   positive side of the surface acts on the part on the negative side is parallel to the axis of
-  k." Positive diagonal entries are tensions, negative ones pressures (Art. 108).
+  k." Positive diagonal entries are tensions, negative ones pressures (Art. 108). This Art. 641
+  convention is used throughout, including for the 1873 electrostatic chapter: 1873 Art. 108's
+  verbal convention ("urge the parts on the positive side") reads the other way, but his
+  face-by-face computation gives the same `ξ = ∑_h d p_hx/dx_h`, so Art. 641's convention
+  reproduces Art. 108's eqs. (7)–(10) (`art108_force`).
 
 Local source text: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt` (1873, vol. II).
 -/

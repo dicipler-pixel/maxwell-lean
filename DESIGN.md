@@ -25,20 +25,20 @@ divergence theorem on boxes). The Hodge-star module is avoided while it still ha
 |---|---|---|
 | Electrostatic tension `p` along `R` with equal lateral pressure, `R² = 8πp`; superposition; components; force `ρR` | 1873 I, Arts. 107–108 | proved |
 | Faraday's statement of the same distribution | 1873 I, Art. 109 | cited only |
-| Energy per unit volume = tension = `½ D·R`; Art. 111 limit | 1873 I, Art. 111 | proved (algebra); limit recorded |
-| Potential `Ψ`, components (14), direct-action surface-integral test | 1881 I, Arts. 103–105 | pointwise proved; integrated form stated |
+| Energy per unit volume = tension = `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`; a polarized dielectric "is the seat of electrical energy" | 1873 I, Art. 111, p. 134 | printed formula proved (page image); Art. 107 is the `K = 1` corollary; location and limit recorded |
+| Potential `Ψ`, components (14), direct-action surface-integral test | 1881 I, Arts. 103–105 | pointwise proved; integrated form proved on boxes (`art105_directAction`); "any closed surface" not formalized |
 | Type of the stress: two principal stresses equal, third reversed | 1881 I, Art. 106 | proved |
 | Force and couple on magnetized element with current | 1873 II, Arts. 639–640 | proved (as the target of Art. 641) |
 | Non-symmetric magnetic stress, couple `B × H/4π` | 1873 II, Art. 641 | proved |
 | Bisector decomposition, couple from `B` toward `H`, isotropic part `H²/8π` | 1873 II, Art. 642 | proved |
 | Unmagnetized stress; force `X = αm + vγ − wβ` with magnetic matter | 1873 II, Art. 643 | proved |
 | Ampère–Weber: `m = 0` as a hypothesis; force `J × H` | 1873 II, Art. 644 | proved under hypothesis |
-| No account of how the stress is maintained; superposition of stresses | 1873 II, Art. 645 | limit recorded; superposition used |
-| Energy split: electric potential `½E·D`, magnetic kinetic `B·H/8π` | 1873 II, Arts. 630–636 | densities defined; integrals stated |
-| Energy "literally" in the field | 1865 § 74 | recorded claim (physical) |
+| No account of how the stress is maintained; superposition of stresses | 1873 II, Art. 645 | limit recorded (including "unfruitful"); superposition defined (`stress645`) and its force proved as his hypothesis |
+| Energy split: electric potential `½E·D`, magnetic kinetic `B·H/8π`; Art. 631 is equal totals ("if we suppose"), not a location claim | 1873 II, Arts. 630–636 | densities defined; integrals stated (compact-support and decay-rate targets) |
+| Energy "literally" in the field | 1865 § 74 (with § 73 "illustrative, not explanatory"); also Art. 636 (hypothesis) and 1873 Art. 111 ("seat of electrical energy") | recorded claims (physical) |
 | Electromagnetic momentum = vector potential; circuit line-integral | 1873 II, Arts. 590, 604; 1865 §§ 57–58 | defined |
 | `v × B` in the electromotive intensity at a moving point | 1873 II, Arts. 598–599 | proved (geometry) |
-| `χ` disappears; set to zero | 1873 II, Art. 616 | proved (invariance); choice stated as later |
+| `χ` disappears; constructed as `(1/4π)∭ J/r` (his `J = div 𝔄`, not the current) then set to zero | 1873 II, Arts. 616–617 | proved (invariance, more general than his specific `χ`); uniqueness stated under uniform `μ` and `div 𝔊 = 0` (Art. 607 (E)) |
 | Momentum is not that of the electricity; null experiments | 1873 II, Arts. 549, 574–575 | recorded |
 | Radiation pressure = energy per unit volume, from the stresses | 1873 II, Art. 792 | proved, with two sharpenings |
 | A medium for energy in transit (no flux vector) | 1873 II, Art. 866 | recorded |
@@ -60,8 +60,18 @@ comparison it goes in a separate, labelled "later" module.
 
 ## Next steps (for review by Grey and ink)
 
-1. Prove `Art105DirectAction` on boxes from `art105_force` and Mathlib's divergence theorem.
-2. Prove `Art631EnergyInField` and `Art635ElectrokineticInField` (integration by parts).
+1. ~~Prove `Art105DirectAction` on boxes from `art105_force` and Mathlib's divergence theorem.~~
+   Done (`art105_directAction`); Maxwell's "any closed surface" remains open.
+2. Prove `Art631EnergyInField` / `Art631EnergyInFieldDecay` and
+   `Art635ElectrokineticInField` / `Art635ElectrokineticInFieldDecay` (integration by parts).
 3. Read Faraday's Lines, Physical Lines, and the 1865 paper in full before writing
    `FaradayLines.lean`, `PhysicalLines.lean`, `DynamicalTheory.lean`.
 4. Treatise vol. II ch. IX general equations (Arts. 604–619) with `K`, `μ`, conductivity.
+5. ~~Confirm Art. 111's printed formula against a page image before restating `art111` as
+   `p = ½ D·E = K E²/8π`, with Art. 107 as the `K = 1` corollary.~~
+   Done (`art111_energy_eq_tension` is `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`, checked against
+   `1873_vol1_n171.jpg`; `art107_tension_of_art111` is the `K = 1` corollary).
+6. ~~Confirm Art. 643's force-law equation number against a page image.~~
+   Done: 1873 vol. II p. 257 (Internet Archive `electricandmagne02maxwrich`) labels the
+   force law "(Equations of Electromagnetic Force.) (20)". Art. 644's
+   `dα/dx + dβ/dy + dγ/dz = 0` is (21); the reduced force is (22).

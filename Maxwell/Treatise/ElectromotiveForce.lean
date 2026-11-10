@@ -9,7 +9,11 @@ import Maxwell.Basic
 Art. 598 (pp. 219–221), equations (B):
 `P = c dy/dt − b dz/dt − dF/dt − dΨ/dx`, and cyclically, where `(a, b, c)` is the magnetic
 induction, `(F, G, H)` the electromagnetic momentum (vector potential), and `Ψ` a function first
-introduced "for the sake of giving generality" which later "represents … the electric potential".
+introduced "for the sake of giving generality". Maxwell is explicit that it is not yet fixed: "The
+quantity Ψ is therefore indeterminate as far as regards the problem now before us. We shall find,
+however, that when we know all the circumstances of the problem, we can assign a definite value to
+Ψ, and that it represents, according to a certain definition, the electric potential at the point
+x, y, z" (p. 221). `emf598` takes `∇Ψ` as an argument and does not choose it.
 The vector `𝔈` is "the force which would be experienced by a unit of positive electricity placed
 at that point" (p. 221).
 

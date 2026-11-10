@@ -12,10 +12,13 @@ Maxwell's order is followed exactly.
   current, from the old (Poisson) theory of magnetism: `X = A dα/dx + B dβ/dx + C dγ/dx + vc − wb`,
   `L = Bγ − Cβ`, with `(A, B, C)` the magnetization, `(α, β, γ)` the magnetic force `H`,
   `(a, b, c)` the induction `B = H + 4πI` (Art. 400), and `4πu = dγ/dy − dβ/dz`, … (Art. 607).
-* **Art. 641 (pp. 253–254).** A stress `P_hk` that reproduces this force and couple:
-  `P_hk = (1/4π) B_h H_k − δ_hk H²/8π` (eq. (15)), using `da/dx + db/dy + dc/dz = 0`
-  (Art. 403, eq. (8) on p. 253). "In the case of a magnetized body, however, there is such a
-  tendency to rotation, and therefore this condition [`P_hk = P_kh`] … is not fulfilled."
+* **Art. 640 (p. 253) into Art. 641 (pp. 253–254).** A stress `P_hk` that reproduces this force
+  and couple: `P_hk = (1/4π) B_h H_k − δ_hk H²/8π` (eq. (15)). The step `da/dx + db/dy + dc/dz = 0`
+  (Art. 403, "the solenoidal condition which is always satisfied by the components of the
+  magnetic induction", vol. II, p. 26) is used in Art. 640, eq. (8) at the top of p. 253, to turn
+  eq. (7) into eq. (9), which Art. 641's stress then matches. "In the case of a magnetized body,
+  however, there is such a tendency to rotation, and therefore this condition [`P_hk = P_kh`] …
+  is not fulfilled."
 * **Art. 642 (p. 255).** In axes bisecting `B` and `H`: a pressure `H²/8π` in all directions,
   a tension `(1/4π) BH cos²ε` along the bisector, a pressure `(1/4π) BH sin²ε` along the exterior
   bisector, and a couple `(1/4π) BH sin 2ε` turning each element from `B` toward `H`. The
@@ -28,14 +31,20 @@ Maxwell's order is followed exactly.
   we get rid of imaginary magnetic matter, and find that everywhere `m = 0`", giving
   `X = vγ − wβ` (eqs. (22) = equations (C) of Art. 603). It is a hypothesis (`AmpereWeber644`),
   never a default.
-* **Art. 645 (p. 257)** is a stated limit and is *not* formalized as anything proved: "We have
-  asserted nothing as yet with respect to the mode in which this state of stress is originated
-  and maintained in the medium." See `Maxwell.Sources.art645`.
+* **Art. 645 (pp. 257–258)** records the superposition of the electrostatic and electromagnetic
+  stresses as a hypothesis (`stress645`, `art645_force`) and states a limit that is *not*
+  formalized as anything proved: "We have asserted nothing as yet with respect to the mode in
+  which this state of stress is originated and maintained in the medium. … it remains to be seen
+  whether the conception of a medium capable of supporting these states of stress is consistent
+  with other known phenomena, or whether we shall have to put it aside as unfruitful." See
+  `Maxwell.Sources.art645`.
 
-Fidelity note. Art. 641 itself uses `div B = 0` (Art. 403) for the magnetized case; Art. 643 then
-sets `B = H` and keeps `div H = 4πm`. With `B = H`, Art. 403 would force `m = 0`, which is what
-Art. 644 then adopts. The formalization therefore keeps the two routes apart: `art641_force` has
-Art. 403 as an explicit hypothesis; `art643_force` does not assume it.
+Fidelity note. Art. 640's reduction of (7) to (9), which Art. 641's stress matches, uses
+`div B = 0` (Art. 403, eq. (8) on p. 253); Art. 643 then sets `B = H` and keeps `div H = 4πm`.
+With `B = H`, Art. 403 would force `m = 0`. That last inference is ours, not Maxwell's: he
+reaches `m = 0` by the Ampère–Weber hypothesis of Art. 644, not by combining Art. 403 with
+`B = H`. The formalization therefore keeps the two routes apart: `art641_force` has Art. 403
+as an explicit hypothesis; `art643_force` does not assume it. See `art643_m_eq_zero_of_art403`.
 
 Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt` (1873, vol. II).
 -/
@@ -101,6 +110,31 @@ theorem art642_parallel (μ : ℝ) (H : Vec3) :
     (magneticStress641 (μ • H) H)ᵀ = magneticStress641 (μ • H) H := by
   rw [art641_symm_iff]; simp
 
+/-- **Art. 642, last paragraph, pp. 255–256, eq. (18):** "When the magnetic induction is in the
+same direction as the magnetic force, as it always is in fluids and non-magnetized solids …
+the stress in this case is therefore a hydrostatic pressure `(1/8π) ℌ²`, combined with a
+longitudinal tension `(1/4π) 𝔅ℌ` along the lines of force." His case is `ε = 0`, so `μ > 0`.
+For `B = μ H` with `H = r û` and `û` a unit vector along `H` (`r` may be negative; only `r²`
+enters), this is `−(H²/8π) · 1 + (μ H²/4π) û ûᵀ`. The algebra holds for any real `μ`, which
+is more general than his. The components (18) are `P_xx = (1/4π)(𝔅ℌ − ½ ℌ²)`,
+`P_yy = P_zz = −ℌ²/8π`. -/
+theorem art642_along_H (μ r : ℝ) {u : Vec3} (hu : u ⬝ᵥ u = 1) :
+    magneticStress641 (μ • (r • u)) (r • u) =
+      (-((r ^ 2) / (8 * Real.pi))) • (1 : Stress) +
+        (μ * (r ^ 2) / fourPi) • vecMulVec u u := by
+  have hsq : sq (r • u) = r ^ 2 := by
+    simp [sq, dotProduct_smul, smul_dotProduct, hu]; ring
+  ext a b
+  simp only [magneticStress641, Matrix.smul_apply, Matrix.add_apply, Matrix.one_apply, vecMulVec,
+    δ, fourPi, hsq, smul_eq_mul, Pi.smul_apply]
+  by_cases hab : a = b
+  · subst hab
+    simp
+    field_simp
+    ring
+  · simp [hab]
+    ring
+
 /-- **Art. 642, eq. (17), p. 255: the bisector decomposition.** Take the `x` axis bisecting
 the angle `2ε` between `B` (numerical value `𝔅`) and `H` (numerical value `ℌ`), the `y` axis in
 their plane toward `H`, so `a = 𝔅 cos ε`, `b = −𝔅 sin ε`, `α = ℌ cos ε`, `β = ℌ sin ε`. Then the
@@ -144,11 +178,14 @@ theorem art643_tension_pressure {H n : Vec3} (hn : H ⬝ᵥ n = 0) :
     traction (magneticStress641 H H) n = -(sq H / (8 * Real.pi)) • n :=
   ⟨art106_tension H, art106_pressure hn⟩
 
-/-- **Art. 643, eqs. (19)–(21), pp. 256–257: the equations of electromagnetic force with the
+/-- **Art. 643, pp. 256–257, eq. (20): the equations of electromagnetic force with the
 magnetic-matter term.** If `dα/dx + dβ/dy + dγ/dz = 4πm` (`m` the density of austral magnetic
-matter) and `4π(u, v, w) = curl H` (Art. 607), the stress (19) gives
+matter) and `4π(u, v, w) = curl H` (Art. 607), the stress (19) (p. 256) gives
 `X = αm + vγ − wβ`, `Y = βm + wα − uγ`, `Z = γm + uβ − vα`, i.e. `m H + J × H`.
-No `div = 0` condition is assumed. -/
+No `div = 0` condition is assumed. Confirmed against the 1873 vol. II page scan, p. 257
+(Internet Archive `electricandmagne02maxwrich`): the force-component display is labeled
+"(Equations of Electromagnetic Force.) (20)". Art. 644 then prints
+`dα/dx + dβ/dy + dγ/dz = 0` as (21), and the reduced force `X = vγ − wβ` &c. as (22). -/
 theorem art643_force {H : Vec3 → Vec3} {x : Vec3} {m : ℝ} {J : Vec3}
     (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x)
     (hm : div H x = fourPi * m) (hJ : curl H x = fourPi • J) :
@@ -161,7 +198,8 @@ theorem art643_force {H : Vec3 → Vec3} {x : Vec3} {m : ℝ} {J : Vec3}
   simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, map_smul, LinearMap.smul_apply]
   field_simp
 
-/-- Art. 643, eq. (21), component by component, as printed: `X = αm + vγ − wβ`. -/
+/-- Art. 643, eq. (20), p. 257, component by component, as printed:
+`X = αm + vγ − wβ`, `Y = βm + wα − uγ`, `Z = γm + uβ − vα`. -/
 theorem art643_force_components {H : Vec3 → Vec3} {x : Vec3} {m : ℝ} {J : Vec3}
     (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x)
     (hm : div H x = fourPi * m) (hJ : curl H x = fourPi • J) :
@@ -176,7 +214,8 @@ theorem art643_force_components {H : Vec3 → Vec3} {x : Vec3} {m : ℝ} {J : Ve
 /-- **Art. 644, p. 257: the Ampère–Weber hypothesis, as a hypothesis.** "If we adopt the
 theories of Ampere and Weber as to the nature of magnetic and diamagnetic bodies, and assume that
 magnetic and diamagnetic polarity are due to molecular electric currents, we get rid of imaginary
-magnetic matter, and find that everywhere `m = 0`." -/
+magnetic matter, and find that everywhere `m = 0`," and, as eq. (21),
+`dα/dx + dβ/dy + dγ/dz = 0`. -/
 def AmpereWeber644 (m : Vec3 → ℝ) : Prop := ∀ x, m x = 0
 
 /-- **Art. 644, eq. (22), p. 257:** under the Ampère–Weber hypothesis the equations of
@@ -187,6 +226,70 @@ theorem art644_force {H : Vec3 → Vec3} {x : Vec3} {m : Vec3 → ℝ} {J : Vec3
     (hm : div H x = fourPi * m x) (hJ : curl H x = fourPi • J) (hAW : AmpereWeber644 m) :
     stressForce (fun y => magneticStress641 (H y) (H y)) x = crossProduct J (H x) := by
   rw [art643_force hH hm hJ, hAW x, zero_smul, zero_add]
+
+/-- **Our observation, not Maxwell's route.** If one combines Art. 643's unmagnetized case
+`B = H` with Art. 403 / Art. 640 eq. (8) (`div B = 0`) and Art. 643's `div H = 4πm`, then
+`m = 0` (with `B = H` as fields, as in Art. 643, not only at one point). Maxwell does not take
+this path: he reaches `m = 0` by the Ampère–Weber hypothesis of
+Art. 644 ("we get rid of imaginary magnetic matter, and find that everywhere `m = 0`"). -/
+theorem art643_m_eq_zero_of_art403 {B H : Vec3 → Vec3} {x : Vec3} {m : ℝ}
+    (hBH : B = H) (hArt403 : div B x = 0) (hm : div H x = fourPi * m) : m = 0 := by
+  subst hBH
+  have : fourPi * m = 0 := by rw [← hm, hArt403]
+  have hpi : fourPi ≠ 0 := by simp [fourPi, Real.pi_ne_zero]
+  exact (mul_eq_zero.mp this).resolve_left hpi
+
+/-- The force of a sum of stresses is the sum of the forces (entrywise differentiable). -/
+theorem stressForce_add {P Q : Vec3 → Stress} {x : Vec3}
+    (hP : ∀ h k, DifferentiableAt ℝ (fun y => P y h k) x)
+    (hQ : ∀ h k, DifferentiableAt ℝ (fun y => Q y h k) x) :
+    stressForce (fun y => P y + Q y) x = stressForce P x + stressForce Q x := by
+  ext k
+  simp only [stressForce, Matrix.add_apply, Pi.add_apply]
+  rw [← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun h _ => pd_add h (hP h k) (hQ h k)
+
+theorem differentiableAt_componentForm {F : Vec3 → Vec3} {x : Vec3}
+    (hF : ∀ i, DifferentiableAt ℝ (fun y => F y i) x) (h k : Fin 3) :
+    DifferentiableAt ℝ (fun y => componentForm (F y) h k) x := by
+  simp only [componentForm, sq_eq]
+  have := hF 0; have := hF 1; have := hF 2; have := hF h; have := hF k
+  fun_prop
+
+theorem differentiableAt_magneticStress641 {B H : Vec3 → Vec3} {x : Vec3}
+    (hB : ∀ i, DifferentiableAt ℝ (fun y => B y i) x)
+    (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x) (h k : Fin 3) :
+    DifferentiableAt ℝ (fun y => magneticStress641 (B y) (H y) h k) x := by
+  simp only [magneticStress641, sq_eq]
+  have := hH 0; have := hH 1; have := hH 2; have := hB h; have := hH k
+  fun_prop
+
+/-! ## Art. 645: superposition of the two stresses, as his hypothesis -/
+
+/-- **Art. 645, p. 258, hypothesis:** "In a field in which electrostatic as well as
+electromagnetic action is taking place, we must suppose the electrostatic stress described in
+Part I to be superposed on the electromagnetic stress which we have been considering."
+(`Maxwell.Sources.art645_superposition`.) -/
+noncomputable def stress645 (E B H : Vec3) : Stress :=
+  componentForm E + magneticStress641 B H
+
+/-- **Art. 645, hypothesis**, using Art. 108 (electric, no curl, Art. 77) and Art. 643
+(unmagnetized magnetic, `B = H`, `div H = 4πm`, `4πJ = curl H`): the superposed stress produces
+the force `ρ E + m H + J × H` per unit volume. Tagged as his hypothesis because the
+superposition itself is ("we must suppose … superposed"). The electrostatic half uses
+`componentForm E` as in 1873 Art. 108; 1881 Art. 105 writes the same matrix from `E = −∇Ψ`. -/
+theorem art645_force {E H : Vec3 → Vec3} {x : Vec3} {ρ m : ℝ} {J : Vec3}
+    (hE : ∀ i, DifferentiableAt ℝ (fun y => E y i) x)
+    (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x)
+    (hcurlE : curl E x = 0) (hArt77 : div E x = fourPi * ρ)
+    (hm : div H x = fourPi * m) (hJ : curl H x = fourPi • J) :
+    stressForce (fun y => stress645 (E y) (H y) (H y)) x =
+      ρ • E x + m • H x + crossProduct J (H x) := by
+  have hadd : (fun y => stress645 (E y) (H y) (H y)) =
+      fun y => componentForm (E y) + magneticStress641 (H y) (H y) := rfl
+  rw [hadd, stressForce_add (differentiableAt_componentForm hE)
+    (differentiableAt_magneticStress641 hH hH), art108_force hE hcurlE hArt77,
+    art643_force hH hm hJ, add_assoc]
 
 /-! ## Arts. 639–641: the magnetized case -/
 
@@ -209,7 +312,8 @@ theorem pd_magneticStress641 {B H : Vec3 → Vec3} {x : Vec3}
 
 /-- **Arts. 639–641, eqs. (4), (7)–(9), (13), (15), pp. 252–254.** In a magnetized body carrying
 a current, with `B = H + 4πI` at the point (Art. 400), `4πJ = curl H` (Art. 607) and Maxwell's
-own use of `da/dx + db/dy + dc/dz = 0` (Art. 403, eq. (8), p. 253), the force of the stress (15)
+own use of `da/dx + db/dy + dc/dz = 0` (Art. 403, used in Art. 640 as eq. (8) on p. 253 to
+reduce (7) to (9), which Art. 641's stress matches), the force of the stress (15)
 equals the force (4) on the element:
 `X = A dα/dx + B dβ/dx + C dγ/dx + vc − wb`, i.e. `∑ᵢ Iᵢ ∂ₖHᵢ + (J × B)ₖ`. Together with
 `art639_couple` this is Maxwell's statement that the stress is "statically equivalent, in its

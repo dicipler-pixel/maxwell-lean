@@ -17,7 +17,8 @@ the whole energy in unit of volume. Hence in a medium in which waves are propaga
 pressure in the direction normal to the waves, and numerically equal to the energy in unit of
 volume."
 
-This is derived **from the stresses** (Arts. 107 and 643, superposed as Art. 645 directs). It is
+This is derived **from the stresses** (Arts. 107 and 643, superposed as Art. 645 directs;
+`stress645`). It is
 not derived from a momentum density of the field, which Maxwell does not have (that reading is
 later: J. J. Thomson 1891, Heaviside, Poincaré 1900, Abraham 1903). No energy-flux vector
 appears either.
@@ -59,9 +60,17 @@ theorem normalStress_add (P Q : Stress) (n : Vec3) :
 (Art. 107) and a tension `p₂ = μ H²/8π` along `H` with equal lateral pressure (Art. 643). The
 superposed stress (Art. 645) is a pressure across the wave-front equal to the whole energy in
 unit of volume, `electrostaticEnergy631 + electrokineticEnergy636`.
-The equality `p₁ = p₂` of eq. (8) is not used. `uE`, `uH` stand for the directions of `E`, `H`;
-only their transversality `uE ⊥ n`, `uH ⊥ n` (Art. 791) is used. -/
-theorem art792_radiation_pressure (K μ : ℝ) {E H uE uH n : Vec3} (hn : n ⬝ᵥ n = 1) (hEn : uE ⬝ᵥ n = 0) (hHn : uH ⬝ᵥ n = 0) :
+The equality `p₁ = p₂` of eq. (8) is not used. `uE`, `uH` are Euclidean unit vectors along
+`E`, `H` (`uE ⬝ᵥ uE = 1` and `E = √(E·E) uE`, likewise `H`: "a tension … in a direction
+parallel to `x`"), lying in the wave-front (`uE ⊥ n`, `uH ⊥ n`, Art. 791). Only transversality
+enters the algebra; the unit and direction hypotheses make the statement say what Art. 792 says.
+(`√(v·v)` is used rather than Lean's `‖v‖`, which on `Fin 3 → ℝ` is the infinity norm.)
+Art. 107's tension in a medium of capacity `K` is Art. 111's dielectric value
+(`art111_energy_eq_tension`). -/
+theorem art792_radiation_pressure (K μ : ℝ) {E H uE uH n : Vec3} (hn : n ⬝ᵥ n = 1)
+    (_huE : uE ⬝ᵥ uE = 1) (_hEuE : E = Real.sqrt (sq E) • uE)
+    (_huH : uH ⬝ᵥ uH = 1) (_hHuH : H = Real.sqrt (sq H) • uH)
+    (hEn : uE ⬝ᵥ n = 0) (hHn : uH ⬝ᵥ n = 0) :
     normalStress (tensionWithLateralPressure (K * sq E / (8 * Real.pi)) uE +
         tensionWithLateralPressure (μ * sq H / (8 * Real.pi)) uH) n =
       -(electrostaticEnergy631 E ((K / fourPi) • E) + electrokineticEnergy636 (μ • H) H) := by
@@ -76,9 +85,9 @@ the case those articles treat): for a transverse disturbance, the superposed str
 `E²/8π + H²/8π`, the whole energy in unit of volume. -/
 theorem art792_radiation_pressure_components {E H n : Vec3} (hn : n ⬝ᵥ n = 1)
     (hEn : E ⬝ᵥ n = 0) (hHn : H ⬝ᵥ n = 0) :
-    normalStress (componentForm E + magneticStress641 H H) n =
+    normalStress (stress645 E H H) n =
       -(electrostaticEnergy631 E ((1 / fourPi) • E) + electrokineticEnergy636 H H) := by
-  rw [normalStress_add, art643_unmagnetized]
+  rw [stress645, normalStress_add, art643_unmagnetized]
   have key : ∀ v : Vec3, v ⬝ᵥ n = 0 → normalStress (componentForm v) n = -(sq v / (8 * Real.pi)) :=
     by
     intro v hv

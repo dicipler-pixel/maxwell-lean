@@ -2,6 +2,7 @@
 Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE).
 -/
 import Maxwell.Basic
+import Mathlib.MeasureTheory.Integral.DivergenceTheorem
 
 /-!
 # Electrostatic stress (Treatise 1873, vol. I, Arts. 107–111; 2nd ed. 1881, vol. I, Arts. 103–106)
@@ -17,24 +18,37 @@ Three things are kept apart here, in Maxwell's order.
    revised by Maxwell) starts from the potential `Ψ` with `∇²Ψ = 4πρ` and writes the components
    (eq. (14)) `p_xx = (1/8π)((dΨ/dx)² − (dΨ/dy)² − (dΨ/dz)²)`, `p_xy = (1/4π)(dΨ/dx)(dΨ/dy)`; the
    point of Art. 105 is the "direct action" test: the action must be expressible as a surface
-   integral over *any* separating surface. The local identity is proved here; the surface
-   integral form is stated in `Maxwell.Statements`.
+   integral over *any* separating surface. The local identity is proved here, and so is the
+   integrated form on boxes (`art105_directAction`, by Mathlib's divergence theorem). Maxwell's
+   "any closed surface" is wider than boxes and is not formalized. Maxwell is explicit that the
+   components are physical only if the action is through a medium; otherwise they are "mere
+   abbreviated forms … having no physical significance" (`Maxwell.Sources.art105_1881`).
 3. **1881, Art. 106.** The type of the stress: tension along the electromotive intensity,
    pressure of the same value across it — "two of its principal stresses equal to each other,
    and the third has the same value with the sign reversed."
 
-What Maxwell did **not** do is also kept: Art. 111 (1873, p. 132) "I have not been able to make
-the next step, namely, to account by mechanical considerations for these stresses in the
-dielectric. I therefore leave the theory at this point." Nothing in this file supplies such a
-mechanism; see `Maxwell.Sources.art111`.
+What Maxwell did **not** do is also kept: Art. 107 (1873, p. 128) calls the illustration "merely
+an explanation of what is meant by the tension and pressure, not as a physical theory to account
+for them"; Art. 110 (p. 132) "we have made only one step in the theory of the action of the
+medium"; and Art. 111 (1873, p. 132, retained in 1881) "I have not been able to make the next
+step, namely, to account by mechanical considerations for these stresses in the dielectric. I
+therefore leave the theory at this point." Nothing in this file supplies such a mechanism; see
+`Maxwell.Sources.art107_illustration`, `Maxwell.Sources.art110`, `Maxwell.Sources.art111`.
+
+Editions. "1873 Art. 106/107" and "1881 Art. 106" are different articles: 1873 Art. 107
+*supposes* the tension with equal lateral pressure ("we must assume … we must further suppose"),
+while 1881 Art. 106 *derives* its type from the components (14). Each docstring names its edition.
 
 Sign conventions. Maxwell's `∇²` is `−(d²/dx² + d²/dy² + d²/dz²)` (footnote to Art. 616,
 vol. II, p. 235, "the negative sign is employed here in order to make our expressions consistent
-with those in which Quaternions are employed"), so his `∇²Ψ = 4πρ` is `−ΔΨ = 4πρ` below.
+with those in which Quaternions are employed"; the same sign in 1881 vol. I, Art. 103, eq. (3),
+`∇²Ψ₂ = 4πρ₂` with `Ψ₂ = ∭ ρ₂/r` positive for positive charge), so his `∇²Ψ = 4πρ` is
+`−ΔΨ = 4πρ` below.
 
 Local sources: `/workspace/maxwell_reread/n_electricandmagne01maxwrich.txt` (1873, vol. I) and
 `/workspace/maxwell_reread/n_treatiseonelectr01maxwrich.txt` (1881, vol. I). The 1873 formula
-typography is badly garbled in the OCR; the algebra was checked by re-deriving it.
+typography is badly garbled in the OCR; the algebra was checked by re-deriving it. Art. 111's
+displayed formula was read from the page image `1873_vol1_n171.jpg` (vol. I, p. 134).
 -/
 
 namespace Maxwell
@@ -52,10 +66,10 @@ def art108Stress (dir : Fin 3 → Vec3) (t : Fin 3 → ℝ) : Stress :=
 /-- Three mutually perpendicular unit directions. -/
 def IsOrthonormalFrame (dir : Fin 3 → Vec3) : Prop := ∀ a b, dir a ⬝ᵥ dir b = δ a b
 
-/-- Treatise 1873, vol. I, Art. 107 (p. 127): "a tension `p` at every point of the medium in the
+/-- Treatise 1873, vol. I, Art. 107 (p. 127), a supposition there: "a tension `p` at every point of the medium in the
 direction of the resultant force `R` … in every direction perpendicular to `R` there is a
 pressure `p`." As a stress along the unit direction `u`: `p (2 u_h u_k − δ_hk)` — Maxwell's own
-decomposition at the end of Art. 106 (p. 126): "the tension `p` may be considered as a pressure
+decomposition at the end of 1873 Art. 106 (p. 126): "the tension `p` may be considered as a pressure
 `p` combined with a tension `2p`." -/
 def tensionWithLateralPressure (p : ℝ) (u : Vec3) : Stress :=
   fun h k => p * (2 * u h * u k - δ h k)
@@ -161,12 +175,17 @@ theorem art108_force {R : Vec3 → Vec3} {x : Vec3} {ρ : ℝ}
   simp [fourPi, Real.pi_ne_zero]
 
 /-- Maxwell's `∇²`, *with his sign*: `∇² = −(d²/dx² + d²/dy² + d²/dz²)` (footnote to Art. 616,
-vol. II, p. 235). -/
+vol. II, p. 235; 1881 vol. I, Art. 103, eq. (3)). -/
 noncomputable def maxwellNabla2 (Ψ : Vec3 → ℝ) (x : Vec3) : ℝ :=
   - ∑ i, pd i (fun y => pd i Ψ y) x
 
 /-- The 1881 electrostatic stress from the potential (Treatise 1881, vol. I, Art. 105, eq. (14),
-p. 147): `p_xx = (1/8π)((dΨ/dx)² − (dΨ/dy)² − (dΨ/dz)²)`, `p_xy = (1/4π)(dΨ/dx)(dΨ/dy)`, etc. -/
+p. 147): `p_xx = (1/8π)((dΨ/dx)² − (dΨ/dy)² − (dΨ/dz)²)`, `p_xy = (1/4π)(dΨ/dx)(dΨ/dy)`, etc.
+Maxwell's condition on reading these as a stress (Art. 105, p. 147, `Maxwell.Sources.art105_1881`):
+if the action is direct action at a distance, they are "mere abbreviated forms for certain
+symbolical expressions, and as having no physical significance"; only if the action "is kept up by
+means of stress in the medium" are they a stress. Lean defines the matrix; the physical reading is
+his hypothesis. -/
 noncomputable def stress1881 (Ψ : Vec3 → ℝ) (x : Vec3) : Stress := componentForm (grad Ψ x)
 
 /-- The 1881 components are unchanged on replacing `dΨ/dx` by the electromotive intensity
@@ -198,6 +217,75 @@ theorem art105_force {Ψ : Vec3 → ℝ} {x : Vec3} {ρ : ℝ} (hΨ : ContDiffAt
   simp [fourPi]
   field_simp
 
+/-! ## 1881, Art. 105, integrated: the direct-action test on boxes -/
+
+/-- The integral of the stress over the face `x_i = s` of the box `[a, b]` (the face is a box in
+the other two coordinates), `k`-component. -/
+noncomputable def faceIntegral (P : Vec3 → Stress) (a b : Vec3) (i : Fin 3) (s : ℝ) (k : Fin 3) :
+    ℝ :=
+  ∫ y in Set.Icc (a ∘ i.succAbove) (b ∘ i.succAbove), P (i.insertNth s y) i k
+
+/-- The force exerted on the contents of the box `[a, b]` by the stress outside it, as a sum of
+integrals of the stress over the six faces (outward normal `+e_i` on the face `x_i = b_i`, `−e_i`
+on `x_i = a_i`; Art. 641 convention, `traction`). -/
+noncomputable def boxSurfaceForce (P : Vec3 → Stress) (a b : Vec3) (k : Fin 3) : ℝ :=
+  ∑ i, (faceIntegral P a b i (b i) k - faceIntegral P a b i (a i) k)
+
+/-- A force density `f` "is accounted for by a distribution of stress `P`" on boxes: for every
+box, the volume integral of `f` equals the surface integral of the stress over its boundary
+(Treatise 1881, vol. I, Art. 105, eqs. (15)–(18), pp. 146–147). Maxwell asks this for *any*
+closed surface separating the two systems; boxes are the case Mathlib's divergence theorem covers
+today. -/
+def AccountedForByStress (P : Vec3 → Stress) (f : Vec3 → Vec3) : Prop :=
+  ∀ a b : Vec3, a ≤ b → ∀ k, ∫ x in Set.Icc a b, f x k = boxSurfaceForce P a b k
+
+/-- Treatise 1881, vol. I, Arts. 104–105, pp. 145–147, and 1873, vol. I, Art. 108, p. 131 ("the
+mechanical effect of these tensions and pressures on any portion of the medium, however bounded,
+will be identical with the mechanical effect of the electrical forces according to the ordinary
+theory"), on boxes: for a `C²` potential with `∇²Ψ = 4πρ` (Maxwell's sign) the force `ρE`,
+`E = −∇Ψ`, is accounted for by the stress (14). Proved below as `art105_directAction`. -/
+def Art105DirectAction : Prop :=
+  ∀ (Ψ : Vec3 → ℝ) (ρ : Vec3 → ℝ), ContDiff ℝ 2 Ψ → (∀ x, maxwellNabla2 Ψ x = fourPi * ρ x) →
+    AccountedForByStress (stress1881 Ψ) (fun x => ρ x • (-grad Ψ x))
+
+theorem contDiff_grad_apply {Ψ : Vec3 → ℝ} (hΨ : ContDiff ℝ 2 Ψ) (j : Fin 3) :
+    ContDiff ℝ 1 (fun x => grad Ψ x j) := by
+  have h1 : ContDiff ℝ 1 (fderiv ℝ Ψ) := hΨ.fderiv_right (m := 1) (by norm_num)
+  exact h1.clm_apply contDiff_const
+
+theorem contDiff_stress1881_apply {Ψ : Vec3 → ℝ} (hΨ : ContDiff ℝ 2 Ψ) (h k : Fin 3) :
+    ContDiff ℝ 1 (fun x => stress1881 Ψ x h k) := by
+  have g := contDiff_grad_apply hΨ
+  simp only [stress1881, componentForm, sq_eq]
+  have := g 0; have := g 1; have := g 2; have := g h; have := g k
+  fun_prop
+
+/-- **Treatise 1881, vol. I, Art. 105, eqs. (15)–(18), pp. 146–147, on boxes.** For a `C²`
+potential `Ψ` with `∇²Ψ = 4πρ` (Maxwell's sign, Art. 103 eq. (3)), on every box `[a, b]` the
+volume integral of the force `ρE` equals the surface integral of the stress (14) over the six
+faces. From the pointwise `art105_force` and
+`MeasureTheory.integral_divergence_of_hasFDerivAt_off_countable'`. Maxwell's "any closed surface"
+is not covered; neither is the physical reading of the stress (`Maxwell.Sources.art105_1881`). -/
+theorem art105_directAction : Art105DirectAction := by
+  intro Ψ ρ hΨ hP a b hab k
+  set f : Fin 3 → Vec3 → ℝ := fun i x => stress1881 Ψ x i k with hf
+  have hfC : ∀ i, ContDiff ℝ 1 (f i) := fun i => contDiff_stress1881_apply hΨ i k
+  have hpt : ∀ x, (ρ x • (-grad Ψ x)) k = ∑ i, fderiv ℝ (f i) x (Pi.single i 1) := by
+    intro x
+    have := congrFun (art105_force (hΨ.contDiffAt) (hP x)) k
+    rw [← this]
+    rfl
+  simp_rw [hpt]
+  have hcont : Continuous (fun x => ∑ i, fderiv ℝ (f i) x (Pi.single i 1)) := by
+    refine continuous_finsetSum _ fun i _ => ?_
+    exact ((hfC i).continuous_fderiv (by norm_num)).clm_apply continuous_const
+  rw [MeasureTheory.integral_divergence_of_hasFDerivAt_off_countable' a b hab f
+    (fun i x => fderiv ℝ (f i) x) ∅ Set.countable_empty
+    (fun i => (hfC i).continuous.continuousOn)
+    (fun x _ i => ((hfC i).differentiable (by norm_num) x).hasFDerivAt)
+    (hcont.integrableOn_Icc)]
+  rfl
+
 /-! ## 1881, Art. 106: the type of the stress -/
 
 theorem componentForm_transpose (v : Vec3) : (componentForm v)ᵀ = componentForm v := by
@@ -210,7 +298,8 @@ theorem traction_componentForm (v n : Vec3) :
     Pi.smul_apply, smul_eq_mul]
   fin_cases k <;> simp <;> ring
 
-/-- **Treatise 1881, vol. I, Art. 106, p. 148** (and 1873, Art. 107): across an element whose
+/-- **Treatise 1881, vol. I, Art. 106, p. 148**, derived there from the components (14) (1873
+Art. 107 instead *supposes* this tension): across an element whose
 normal is along the electromotive intensity `E`, the force is "normal to the element and
 directed outwards, that is to say, it is a tension like that of a rope, and its value per unit of
 area is `E²/8π`." -/
@@ -229,31 +318,57 @@ theorem art106_pressure {E n : Vec3} (hn : E ⬝ᵥ n = 0) :
 
 /-- **Treatise 1881, vol. I, Art. 106, p. 149:** "The stress as thus defined is not of the most
 general type, for it has two of its principal stresses equal to each other, and the third has
-the same value with the sign reversed." For `E ≠ 0` with `E, e₁, e₂` mutually perpendicular,
-the principal values are `E²/8π` along `E` and `−E²/8π` along `e₁` and `e₂`, and the stress is
-symmetric. -/
-theorem art106_principal {E e₁ e₂ : Vec3} (h₁ : E ⬝ᵥ e₁ = 0) (h₂ : E ⬝ᵥ e₂ = 0) :
+the same value with the sign reversed." Stated for a frame as Maxwell means it: `E ≠ 0`, and
+`E, e₁, e₂` mutually perpendicular with `e₁, e₂` unit vectors. Then the stress is symmetric, `E`,
+`e₁`, `e₂` are principal directions (each traction is along its own normal), and the principal
+values are `E²/8π` along `E` and `−E²/8π` along `e₁` and `e₂`; the third value is the first with
+the sign reversed, and it is nonzero. (The traction identities alone need only `E ⟂ e₁, e₂`.) -/
+theorem art106_principal {E e₁ e₂ : Vec3} (hE : E ≠ 0) (h₁ : E ⬝ᵥ e₁ = 0) (h₂ : E ⬝ᵥ e₂ = 0)
+    (h₁₂ : e₁ ⬝ᵥ e₂ = 0) (hu₁ : e₁ ⬝ᵥ e₁ = 1) (hu₂ : e₂ ⬝ᵥ e₂ = 1) :
     (componentForm E)ᵀ = componentForm E ∧
     traction (componentForm E) E = (sq E / (8 * Real.pi)) • E ∧
     traction (componentForm E) e₁ = (-(sq E / (8 * Real.pi))) • e₁ ∧
-    traction (componentForm E) e₂ = (-(sq E / (8 * Real.pi))) • e₂ :=
-  ⟨componentForm_transpose E, art106_tension E, by rw [art106_pressure h₁, neg_smul],
-    by rw [art106_pressure h₂, neg_smul]⟩
+    traction (componentForm E) e₂ = (-(sq E / (8 * Real.pi))) • e₂ ∧
+    e₁ ⬝ᵥ traction (componentForm E) e₂ = 0 ∧
+    e₁ ⬝ᵥ traction (componentForm E) e₁ = -(sq E / (8 * Real.pi)) ∧
+    e₂ ⬝ᵥ traction (componentForm E) e₂ = -(sq E / (8 * Real.pi)) ∧
+    sq E / (8 * Real.pi) ≠ 0 := by
+  have hsq : sq E ≠ 0 := by
+    intro h
+    exact hE (dotProduct_self_eq_zero.mp h)
+  refine ⟨componentForm_transpose E, art106_tension E, by rw [art106_pressure h₁, neg_smul],
+    by rw [art106_pressure h₂, neg_smul], ?_, ?_, ?_, ?_⟩
+  · rw [art106_pressure h₂, dotProduct_smul, h₁₂, smul_eq_mul, mul_zero]
+  · rw [art106_pressure h₁, dotProduct_smul, hu₁, smul_eq_mul, mul_one]
+  · rw [art106_pressure h₂, dotProduct_smul, hu₂, smul_eq_mul, mul_one]
+  · have : (8 * Real.pi) ≠ 0 := by simp [Real.pi_ne_zero]
+    exact div_ne_zero hsq this
 
 /-! ## 1873, Art. 111: energy per unit volume equals the tension per unit area -/
 
-/-- **Treatise 1873, vol. I, Art. 111, p. 134:** "the energy in unit of volume of the medium is
-numerically equal to the electric tension on unit of area, both quantities being equal to half
-the product of the displacement and the resultant electromotive force." With the displacement
-`D = K R / 4π` of a dielectric of specific inductive capacity `K` (Art. 111, I, and Art. 75),
-half the product is `K R²/8π`; for `K = 1` it is the tension `p = R²/8π` of Art. 107.
+/-- **Treatise 1873, vol. I, Art. 111, p. 134.** "A dielectric medium, when thus polarized, is the
+seat of electrical energy, and the energy in unit of volume of the medium is numerically equal
+to the electric tension on unit of area, both quantities being equal to half the product of the
+displacement and the resultant electromotive force, or
+`p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`,
+where `p` is the electric tension, `𝔇` the displacement, `𝔈` the electromotive force, and `K`
+the specific inductive capacity" (`Maxwell.Sources.art111_energy`; confirmed against the 1873 vol. I page scan,
+p. 134, Internet Archive `electricandmagne01maxwrich`).
 
-Sharpening: Art. 107 states the tension for the case `R² = 8πp` without `K`; Art. 111 asserts
-equality with `½ D·R` in a dielectric. The formal statement records the two separately, and
-equality with Art. 107's `p` holds exactly when `K = 1`. -/
-theorem art111_energy_eq_tension (K : ℝ) (R : Vec3) :
-    (1 / 2) * (R ⬝ᵥ ((K / fourPi) • R)) = K * sq R / (8 * Real.pi) ∧
-    (1 / 2) * (R ⬝ᵥ ((1 / fourPi) • R)) = sq R / (8 * Real.pi) := by
-  constructor <;> simp [sq, dotProduct_smul, fourPi] <;> field_simp <;> ring
+Here `R` is `𝔈` and `D = (K / 4π) • R` is `𝔇`. The printed juxtaposition `𝔇 𝔈` is the product
+of the two magnitudes along the same line, written as the inner product. The third member needs
+`K ≠ 0`. Arts. 107–108 carry no `K` (they use Art. 77, i.e. the `K = 1` case); that case is
+the corollary `art107_tension_of_art111`,
+not a disagreement with Art. 111. Art. 792 later uses this dielectric value. -/
+theorem art111_energy_eq_tension (K : ℝ) (hK : K ≠ 0) (R : Vec3) :
+    (1 / 2) * (((K / fourPi) • R) ⬝ᵥ R) = K * sq R / (8 * Real.pi) ∧
+    (1 / 2) * (((K / fourPi) • R) ⬝ᵥ R) = (2 * Real.pi / K) * sq ((K / fourPi) • R) := by
+  constructor <;> simp [sq, dotProduct_smul, fourPi] <;> field_simp [hK] <;> ring
+
+/-- **Art. 107 as the `K = 1` case of Art. 111.** Arts. 107–108 carry no `K` (they use Art. 77,
+i.e. the `K = 1` case), so Art. 111's `p = (1/8π) K 𝔈²` becomes `p = R²/8π`. -/
+theorem art107_tension_of_art111 (R : Vec3) :
+    (1 / 2) * (((1 / fourPi) • R) ⬝ᵥ R) = sq R / (8 * Real.pi) := by
+  simpa using (art111_energy_eq_tension (K := 1) one_ne_zero R).1
 
 end Maxwell
