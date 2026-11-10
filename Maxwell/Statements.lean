@@ -145,7 +145,7 @@ is one, and only one, distribution of the values of 𝔄, such that 𝔄 is ever
 continuous, and satisfies the equations `∇²𝔄 = 4πμ𝔊`, `S.∇𝔄 = 0`, and vanishes at an infinite
 distance from the electric system." Maxwell's `∇²` (his sign) acts componentwise. The source
 `𝔊` is the total current (Art. 618 table), which is solenoidal by Art. 607 (E)
-(`4π𝔍 = curl H`, so `div 𝔊 = 0`). Without that hypothesis the statement is false: if `μ ≠ 0`
+(`4π𝔊 = curl H`, so `div 𝔊 = 0`). Without that hypothesis the statement is false: if `μ ≠ 0`
 and `div G` is not identically zero, no decaying solenoidal `𝔄` exists. The scalar `μ` is
 uniform: "According to our hypothesis `a, b, c` are identical with `μα, μβ, μγ` respectively"
 (Art. 616, p. 235). Existence is the construction of Art. 616 eqs. (5)–(7); uniqueness is
