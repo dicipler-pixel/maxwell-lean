@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE).
 -/
-import Maxwell.Basic
+import Maxwell.Treatise.ElectrostaticStress
 import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 
 /-!
@@ -30,8 +30,9 @@ eqs. (5)–(7) (his `J = div 𝔄`, eq. (2), not the current).
 
 "Momentum" here is in the Lagrangian (generalized) sense of Arts. 578, 604 and 634: the currents are
 velocities of a dynamical system and `∮𝔄·ds` is the momentum conjugate to the current. `circuitMomentum`
-is only the line-integral; its two defining properties are stated in `Maxwell.Statements`: the
-impulse of Art. 590 as a target (`Art590Impulse`), and `T = ½∑ p i` of Art. 634 as the shape
+is only the line-integral; its two defining properties: the
+impulse of Art. 590 (`Art590Impulse`, proved as `art590_impulse` in
+`Maxwell.Treatise.ElectromotiveForce`), and `T = ½∑ p i` of Art. 634 as the shape
 of the claim (`Art634KineticEnergy`), not yet a closed target. Maxwell's *choice* `χ = 0`
 (`div 𝔄 = 0`) is a choice, and the full
 later gauge transformation of the pair `(𝔄, Ψ)` is not his statement and is not formalized as his.
@@ -39,7 +40,7 @@ later gauge transformation of the pair `(𝔄, Ψ)` is not his statement and is 
 This is **not** a field momentum density (no `D × H/4πc`); see `Maxwell.Sources.art549` and
 `Maxwell.Sources.art574_575` for his own caveats and null experiments.
 
-Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt`.
+Source: Internet Archive `electricandmagne02maxwrich` (1873, vol. II).
 -/
 
 namespace Maxwell
@@ -98,5 +99,84 @@ theorem art616_circuitMomentum_unchanged {A : Vec3 → Vec3} {χ : Vec3 → ℝ}
   unfold circuitMomentum
   simp only [add_dotProduct]
   rw [intervalIntegral.integral_add hintA hintχ, loop_integral_grad hχ hγ hclosed hintχ, add_zero]
+
+/-! ## Arts. 616–617: what is proved toward the gauge choice and uniqueness -/
+
+section Art616617
+
+open Filter Topology
+
+/-- `div (𝔄 + ∇χ) = div 𝔄 − ∇²χ`, with Maxwell's `∇² = −Δ`. -/
+theorem div_add_grad {A : Vec3 → Vec3} {χ : Vec3 → ℝ} {x : Vec3}
+    (hA : ∀ i, DifferentiableAt ℝ (fun y => A y i) x) (hχ : ContDiffAt ℝ 2 χ x) :
+    div (fun y => A y + grad χ y) x = div A x - maxwellNabla2 χ x := by
+  simp only [div, maxwellNabla2, Pi.add_apply, grad,
+    pd_add _ (hA _) (differentiableAt_pd hχ _), Finset.sum_add_distrib]
+  ring
+
+/-- **Art. 616 reduced to a Poisson equation.** A `C²` `χ` makes `𝔄 + ∇χ` solenoidal exactly when
+`∇²χ = J` with Maxwell's `∇² = −Δ` and his `J = div 𝔄` (eq. (2); not the current). So
+`Art616GaugeChoiceAvailable` is the solvability of this Poisson equation for compactly supported
+smooth `J`, which needs the Newtonian potential `(1/4π)∭ J/r` (Euclidean `r`); Mathlib does not
+yet provide it, and the Prop stays open. -/
+theorem art616_gauge_iff_poisson {A : Vec3 → Vec3} {χ : Vec3 → ℝ}
+    (hA : ∀ i, Differentiable ℝ (fun y => A y i)) (hχ : ContDiff ℝ 2 χ) :
+    (∀ x, div (fun y => A y + grad χ y) x = 0) ↔ ∀ x, maxwellNabla2 χ x = div A x := by
+  refine forall_congr' fun x => ?_
+  rw [div_add_grad (fun i => hA i x) hχ.contDiffAt, sub_eq_zero, eq_comm]
+
+theorem maxwellNabla2_sub {f g : Vec3 → ℝ} (hf : ContDiff ℝ 2 f) (hg : ContDiff ℝ 2 g) (x : Vec3) :
+    maxwellNabla2 (fun y => f y - g y) x = maxwellNabla2 f x - maxwellNabla2 g x := by
+  have hfd : ∀ y, DifferentiableAt ℝ f y := fun y => hf.differentiable (by norm_num) y
+  have hgd : ∀ y, DifferentiableAt ℝ g y := fun y => hg.differentiable (by norm_num) y
+  have e : ∀ i, (fun y => pd i (fun z => f z - g z) y) = fun y => pd i f y - pd i g y :=
+    fun i => funext fun y => pd_sub i (hfd y) (hgd y)
+  simp only [maxwellNabla2, e, pd_sub _ (differentiableAt_pd hf.contDiffAt _)
+    (differentiableAt_pd hg.contDiffAt _), Finset.sum_sub_distrib]
+  ring
+
+/-- **Art. 617, the difference of two solutions.** Two solutions of the Art. 617 system for the
+same total current `C` (components `u, v, w`) differ by a `C²`, solenoidal field whose components
+satisfy `∇² = 0` and vanish at infinity. -/
+theorem art617_difference {μ : ℝ} {C A₁ A₂ : Vec3 → Vec3}
+    (h₁ : ContDiff ℝ 2 A₁ ∧ (∀ x, div A₁ x = 0) ∧
+      (∀ i x, maxwellNabla2 (fun y => A₁ y i) x = fourPi * μ * C x i) ∧
+        Tendsto A₁ (cocompact Vec3) (𝓝 0))
+    (h₂ : ContDiff ℝ 2 A₂ ∧ (∀ x, div A₂ x = 0) ∧
+      (∀ i x, maxwellNabla2 (fun y => A₂ y i) x = fourPi * μ * C x i) ∧
+        Tendsto A₂ (cocompact Vec3) (𝓝 0)) :
+    ContDiff ℝ 2 (fun y => A₁ y - A₂ y) ∧ (∀ x, div (fun y => A₁ y - A₂ y) x = 0) ∧
+      (∀ i x, maxwellNabla2 (fun y => (A₁ y - A₂ y) i) x = 0) ∧
+        Tendsto (fun y => A₁ y - A₂ y) (cocompact Vec3) (𝓝 0) := by
+  obtain ⟨c₁, d₁, p₁, t₁⟩ := h₁
+  obtain ⟨c₂, d₂, p₂, t₂⟩ := h₂
+  have hc₁ := contDiff_pi.1 c₁
+  have hc₂ := contDiff_pi.1 c₂
+  refine ⟨c₁.sub c₂, fun x => ?_, fun i x => ?_, by simpa using t₁.sub t₂⟩
+  · rw [div_sub (fun i => (hc₁ i).differentiable (by norm_num) x)
+      (fun i => (hc₂ i).differentiable (by norm_num) x), d₁, d₂, sub_zero]
+  · simp only [Pi.sub_apply]
+    rw [maxwellNabla2_sub (hc₁ i) (hc₂ i), p₁, p₂, sub_self]
+
+/-- **Art. 617, uniqueness given Liouville.** If every `C²` harmonic function on space that
+vanishes at infinity is zero (a Liouville / maximum-principle statement for `ℝ³`, not yet in
+Mathlib), the Art. 617 solution is unique. The hypothesis `hL` is stated, not assumed globally. -/
+theorem art617_unique_of_liouville
+    (hL : ∀ u : Vec3 → ℝ, ContDiff ℝ 2 u → (∀ x, maxwellNabla2 u x = 0) →
+      Tendsto u (cocompact Vec3) (𝓝 0) → u = 0)
+    {μ : ℝ} {C A₁ A₂ : Vec3 → Vec3}
+    (h₁ : ContDiff ℝ 2 A₁ ∧ (∀ x, div A₁ x = 0) ∧
+      (∀ i x, maxwellNabla2 (fun y => A₁ y i) x = fourPi * μ * C x i) ∧
+        Tendsto A₁ (cocompact Vec3) (𝓝 0))
+    (h₂ : ContDiff ℝ 2 A₂ ∧ (∀ x, div A₂ x = 0) ∧
+      (∀ i x, maxwellNabla2 (fun y => A₂ y i) x = fourPi * μ * C x i) ∧
+        Tendsto A₂ (cocompact Vec3) (𝓝 0)) : A₁ = A₂ := by
+  obtain ⟨c, -, p, t⟩ := art617_difference h₁ h₂
+  funext x; ext i
+  have := congrFun (hL (fun y => (A₁ y - A₂ y) i) (contDiff_pi.1 c i) (p i)
+    (by simpa [Function.comp_def] using ((continuous_apply i).tendsto 0).comp t)) x
+  simpa [sub_eq_zero] using this
+
+end Art616617
 
 end Maxwell

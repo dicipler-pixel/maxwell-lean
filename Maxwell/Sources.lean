@@ -5,12 +5,13 @@ Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE)
 /-!
 # Source records: Maxwell's claims, hypotheses, and stated limits, in his words
 
-Each record names the work, edition, article or section, page in the edition used, the local
-OCR file under `/workspace/maxwell_reread/`, an exact quotation (checked against that file), and
-a status. These are **data**, not theorems: nothing here is asserted in Lean. They exist so that
-the limits Maxwell stated stay visible next to the proofs and cannot be silently upgraded.
+Each record names the work, edition, article or section, page in the edition used, the
+Internet Archive identifier of the scan it was checked against, an exact quotation (checked
+against that scan), and a status. These are **data**, not theorems: nothing here is asserted
+in Lean. They exist so that the limits Maxwell stated stay visible next to the proofs and
+cannot be silently upgraded.
 
-Quotes are taken from those OCR files with line-break artefacts (and obvious single-character
+Quotes are taken from those scans with line-break artefacts (and obvious single-character
 OCR typographical errors, such as "ass unfruitful") corrected against the readable wording.
 Formulae that the OCR left illegible are not invented here.
 -/
@@ -42,10 +43,10 @@ structure Source where
   status : Status
   deriving Repr
 
-def treatise1873I : String := "n_electricandmagne01maxwrich.txt"
-def treatise1873II : String := "n_electricandmagne02maxwrich.txt"
-def treatise1881I : String := "n_treatiseonelectr01maxwrich.txt"
-def sciPapersI : String := "n_scientificpapers01maxwuoft.txt"
+def treatise1873I : String := "electricandmagne01maxwrich"
+def treatise1873II : String := "electricandmagne02maxwrich"
+def treatise1881I : String := "treatiseonelectr01maxwrich"
+def sciPapersI : String := "scientificpapers01maxwuoft"
 
 def art107 : Source :=
   { work := "A Treatise on Electricity and Magnetism", edition := "1st ed., Clarendon 1873, vol. I"

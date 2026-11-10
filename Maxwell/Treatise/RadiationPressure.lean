@@ -30,7 +30,7 @@ Two sharpenings, both proved below:
   magnetized stress of Arts. 641–642 literally with `B = μH`, the magnetic contribution to the
   normal pressure is `H²/8π`, which equals the electrokinetic energy `μH²/8π` only when `μ = 1`.
 
-Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt`.
+Source: Internet Archive `electricandmagne02maxwrich` (1873, vol. II).
 -/
 
 namespace Maxwell

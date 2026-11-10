@@ -29,7 +29,7 @@ Magnetism* (1st ed. 1873; 2nd ed. 1881). No physical claim is made in this file.
   face-by-face computation gives the same `ξ = ∑_h d p_hx/dx_h`, so Art. 641's convention
   reproduces Art. 108's eqs. (7)–(10) (`art108_force`).
 
-Local source text: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt` (1873, vol. II).
+Source text: Internet Archive `electricandmagne02maxwrich` (1873, vol. II).
 -/
 
 namespace Maxwell
@@ -141,5 +141,61 @@ theorem pd_pd_comm {Ψ : Vec3 → ℝ} {x : Vec3} (hΨ : ContDiffAt ℝ 2 Ψ x) 
     pd i (fun y => pd j Ψ y) x = pd j (fun y => pd i Ψ y) x := by
   rw [pd_pd hΨ, pd_pd hΨ]
   exact (hΨ.isSymmSndFDerivAt (by simp [minSmoothness_of_isRCLikeNormedField])) _ _
+
+/-! ### Product rules and continuity for `div`, `curl`, `grad` (bookkeeping) -/
+
+/-- Product rule: `div (Ψ D) = ∇Ψ · D + Ψ div D`. -/
+theorem div_smul {Ψ : Vec3 → ℝ} {D : Vec3 → Vec3} {x : Vec3} (hΨ : DifferentiableAt ℝ Ψ x)
+    (hD : ∀ i, DifferentiableAt ℝ (fun y => D y i) x) :
+    div (fun y => Ψ y • D y) x = grad Ψ x ⬝ᵥ D x + Ψ x * div D x := by
+  simp only [div, Pi.smul_apply, smul_eq_mul, pd_mul _ hΨ (hD _), Finset.sum_add_distrib,
+    Finset.mul_sum, grad, dotProduct]
+
+/-- `div (𝔄 × H) = H · curl 𝔄 − 𝔄 · curl H`. -/
+theorem div_cross {A H : Vec3 → Vec3} {x : Vec3} (hA : ∀ i, DifferentiableAt ℝ (fun y => A y i) x)
+    (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x) :
+    div (fun y => crossProduct (A y) (H y)) x = H x ⬝ᵥ curl A x - A x ⬝ᵥ curl H x := by
+  have hm : ∀ i j, DifferentiableAt ℝ (fun y => A y i * H y j) x := fun i j => (hA i).mul (hH j)
+  have e : ∀ i j k, pd k (fun y => A y i * H y j - A y j * H y i) x =
+      (pd k (fun y => A y i) x * H x j + A x i * pd k (fun y => H y j) x) -
+        (pd k (fun y => A y j) x * H x i + A x j * pd k (fun y => H y i) x) := by
+    intro i j k
+    rw [pd_sub _ (hm i j) (hm j i), pd_mul _ (hA i) (hH j), pd_mul _ (hA j) (hH i)]
+  simp only [div, Fin.sum_univ_three, cross_apply]
+  simp only [Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.head_cons,
+    Matrix.tail_cons]
+  rw [e 1 2 0, e 2 0 1, e 0 1 2]
+  simp only [curl, dotProduct, Fin.sum_univ_three, Matrix.cons_val_zero, Matrix.cons_val_one,
+    Matrix.cons_val_two, Matrix.head_cons, Matrix.tail_cons]
+  ring
+
+theorem continuous_div {F : Vec3 → Vec3} (hF : ContDiff ℝ 1 F) : Continuous (div F) := by
+  unfold div pd
+  refine continuous_finsetSum _ fun i _ => ?_
+  exact ((contDiff_pi.1 hF i).continuous_fderiv (by norm_num)).clm_apply continuous_const
+
+theorem continuous_curl {F : Vec3 → Vec3} (hF : ContDiff ℝ 1 F) : Continuous (curl F) := by
+  have h : ∀ i j, Continuous (fun x => pd i (fun y => F y j) x) := fun i j =>
+    ((contDiff_pi.1 hF j).continuous_fderiv (by norm_num)).clm_apply continuous_const
+  unfold curl
+  refine continuous_pi fun k => ?_
+  fin_cases k <;> simp <;> fun_prop
+
+theorem continuous_grad {Ψ : Vec3 → ℝ} (hΨ : ContDiff ℝ 1 Ψ) : Continuous (grad Ψ) :=
+  continuous_pi fun i => (hΨ.continuous_fderiv (by norm_num)).clm_apply continuous_const
+
+theorem div_sub {A B : Vec3 → Vec3} {x : Vec3} (hA : ∀ i, DifferentiableAt ℝ (fun y => A y i) x)
+    (hB : ∀ i, DifferentiableAt ℝ (fun y => B y i) x) :
+    div (fun y => A y - B y) x = div A x - div B x := by
+  simp only [div, Pi.sub_apply, pd_sub _ (hA _) (hB _), Finset.sum_sub_distrib]
+
+theorem abs_cross_apply_le {a b : Vec3} {α β : ℝ} (ha : ∀ i, |a i| ≤ α) (hb : ∀ i, |b i| ≤ β)
+    (i : Fin 3) : |crossProduct a b i| ≤ 2 * (α * β) := by
+  have hab : ∀ j k, |a j * b k| ≤ α * β := fun j k => by
+    rw [abs_mul]; exact mul_le_mul (ha j) (hb k) (abs_nonneg _) ((abs_nonneg _).trans (ha j))
+  fin_cases i <;> simp only [cross_apply, Fin.zero_eta, Fin.mk_one, Fin.reduceFinMk,
+      Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_two, Matrix.head_cons,
+      Matrix.tail_cons] <;>
+    exact (abs_sub _ _).trans (by linarith [hab 1 2, hab 2 1, hab 2 0, hab 0 2, hab 0 1, hab 1 0])
 
 end Maxwell

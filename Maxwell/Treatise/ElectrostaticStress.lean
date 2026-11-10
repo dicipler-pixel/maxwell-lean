@@ -45,10 +45,10 @@ with those in which Quaternions are employed"; the same sign in 1881 vol. I, Art
 `∇²Ψ₂ = 4πρ₂` with `Ψ₂ = ∭ ρ₂/r` positive for positive charge), so his `∇²Ψ = 4πρ` is
 `−ΔΨ = 4πρ` below.
 
-Local sources: `/workspace/maxwell_reread/n_electricandmagne01maxwrich.txt` (1873, vol. I) and
-`/workspace/maxwell_reread/n_treatiseonelectr01maxwrich.txt` (1881, vol. I). The 1873 formula
+Sources: Internet Archive `electricandmagne01maxwrich` (1873, vol. I) and
+`treatiseonelectr01maxwrich` (1881, vol. I). The 1873 formula
 typography is badly garbled in the OCR; the algebra was checked by re-deriving it. Art. 111's
-displayed formula was read from the page image `1873_vol1_n171.jpg` (vol. I, p. 134).
+displayed formula was read from Internet Archive `electricandmagne01maxwrich`, page n171 (vol. I, p. 134).
 -/
 
 namespace Maxwell

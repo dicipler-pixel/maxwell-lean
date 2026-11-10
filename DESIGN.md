@@ -62,15 +62,21 @@ comparison it goes in a separate, labelled "later" module.
 
 1. ~~Prove `Art105DirectAction` on boxes from `art105_force` and Mathlib's divergence theorem.~~
    Done (`art105_directAction`); Maxwell's "any closed surface" remains open.
-2. Prove `Art631EnergyInField` / `Art631EnergyInFieldDecay` and
-   `Art635ElectrokineticInField` / `Art635ElectrokineticInFieldDecay` (integration by parts).
+2. ~~Prove `Art631EnergyInField` / `Art631EnergyInFieldDecay` and
+   `Art635ElectrokineticInField` / `Art635ElectrokineticInFieldDecay` (integration by parts).~~
+   Done, both compact-support and decay versions (`art631_energyInField`,
+   `art631_energyInFieldDecay`, `art635_electrokineticInField`,
+   `art635_electrokineticInFieldDecay`, via `integral_div_eq_zero_of_decay` on cubes). Still
+   open nearby: `Art616GaugeChoiceAvailable` and the existence half of `Art617Uniqueness`
+   (Newtonian potential), the uniqueness half (Liouville on `ℝ³`), and `Art634KineticEnergy`
+   (shape only).
 3. Read Faraday's Lines, Physical Lines, and the 1865 paper in full before writing
    `FaradayLines.lean`, `PhysicalLines.lean`, `DynamicalTheory.lean`.
 4. Treatise vol. II ch. IX general equations (Arts. 604–619) with `K`, `μ`, conductivity.
 5. ~~Confirm Art. 111's printed formula against a page image before restating `art111` as
    `p = ½ D·E = K E²/8π`, with Art. 107 as the `K = 1` corollary.~~
    Done (`art111_energy_eq_tension` is `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`, checked against
-   `1873_vol1_n171.jpg`; `art107_tension_of_art111` is the `K = 1` corollary).
+   Internet Archive `electricandmagne01maxwrich`, page n171; `art107_tension_of_art111` is the `K = 1` corollary).
 6. ~~Confirm Art. 643's force-law equation number against a page image.~~
    Done: 1873 vol. II p. 257 (Internet Archive `electricandmagne02maxwrich`) labels the
    force law "(Equations of Electromagnetic Force.) (20)". Art. 644's

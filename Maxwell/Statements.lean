@@ -31,86 +31,20 @@ and the theorem `art105_directAction` now live in `Maxwell.Treatise.Electrostati
 on boxes). Maxwell's "any closed surface" remains wider than boxes and is not a separate
 statement here. -/
 
-/-! ## Energy: the integrations by parts of Arts. 631 and 635 -/
+/-! ## Energy: the integrations by parts of Arts. 631 and 635
 
-/-- **Target (expected provable, with a sharpened hypothesis).** Treatise 1873, vol. II,
-Arts. 630–631, pp. 246–247: `W = ½ ∑ eΨ`, with the quantity of electricity in an element
-`(df/dx + dg/dy + dh/dz) dx dy dz`, equals `½ ∭ (Pf + Qg + Rh) dx dy dz` over all space.
-Maxwell uses decay at infinity (`Ψ ~ r⁻¹`, `D ~ r⁻²`); the statement uses compact support,
-which is stronger and excludes every case he treats (any system with net charge has `Ψ ~ r⁻¹`).
-A `C¹` `D` also excludes the conductor surface charges of Art. 630's `½∑ eΨ`. Keep this as a
-stepping stone; `Art631EnergyInFieldDecay` is the claim with his decay rates.
+The six definitions `Art631EnergyInField`, `Art635ElectrokineticInField`, `DecaysAsArt631`,
+`Art631EnergyInFieldDecay`, `DecaysAsArt635`, `Art635ElectrokineticInFieldDecay` now live in
+`Maxwell.Treatise.Energy`, with their proofs `art631_energyInField`, `art635_electrokineticInField`
+(compact support) and `art631_energyInFieldDecay`, `art635_electrokineticInFieldDecay` (Maxwell's
+decay rates; for Art. 635 with our `𝔄 ~ r⁻²`). The surface term is taken on the cubes
+`[-n, n]³` (`integral_div_eq_zero_of_decay`). Equal totals only: no theorem here locates the
+energy. -/
 
-Equality of the two totals is all the mathematics gives, and it is all Art. 631 claims: "the
-electrostatic energy of the whole field will be the same *if we suppose* that it resides…"
-(`Maxwell.Sources.art631`). It does **not** locate the energy. Location is the physical claim of
-1865, § 74 (`Maxwell.Sources.dyn1865_s74`), of Art. 636 as a hypothesis, and of 1873 Art. 111
-("is the seat of electrical energy", `Maxwell.Sources.art111_energy`). -/
-def Art631EnergyInField : Prop :=
-  ∀ (Ψ : Vec3 → ℝ) (D : Vec3 → Vec3), ContDiff ℝ 1 Ψ → ContDiff ℝ 1 D →
-    HasCompactSupport Ψ → HasCompactSupport D →
-    (1 / 2) * ∫ x, div D x * Ψ x = ∫ x, electrostaticEnergy631 (-grad Ψ x) (D x)
+/-! ## Arts. 590 and 634: why 𝔄 is called a momentum (Lagrangian / generalized)
 
-/-- **Target (expected provable, with a sharpened hypothesis).** Treatise 1873, vol. II,
-Arts. 634–635, eqs. (16)–(19), pp. 248–249: `T = ½ ∭ (Fu + Gv + Hw)` over the currents equals
-`(1/8π) ∭ (aα + bβ + cγ)` over all space, with `𝔅 = curl 𝔄` (Art. 591) and `4πJ = curl H`
-(Art. 607). Compact support replaces Maxwell's decay `H ~ r⁻³` and excludes every case he treats.
-Keep this as a stepping stone; `Art635ElectrokineticInFieldDecay` is the claim with his decay
-rates. Again: equal totals, not a proof of where the energy is (location of the kinetic energy
-is the hypothesis of Art. 636, `Maxwell.Sources.art636`, and of 1865 § 74). -/
-def Art635ElectrokineticInField : Prop :=
-  ∀ (A H : Vec3 → Vec3), ContDiff ℝ 1 A → ContDiff ℝ 1 H →
-    HasCompactSupport A → HasCompactSupport H →
-    (1 / 2) * ∫ x, A x ⬝ᵥ ((1 / fourPi) • curl H x) =
-      ∫ x, electrokineticEnergy636 (curl A x) (H x)
-
-/-- Maxwell's decay in Art. 631: `Ψ` of the order `r⁻¹`, and `f, g, h` (the components of `D`)
-of the order `r⁻²`, for large `r`. (`‖x‖` on `Fin 3 → ℝ` is equivalent to Euclidean `r`.) -/
-def DecaysAsArt631 (Ψ : Vec3 → ℝ) (D : Vec3 → Vec3) : Prop :=
-  ∃ CΨ CD : ℝ, ∀ x : Vec3, x ≠ 0 →
-    |Ψ x| ≤ CΨ / ‖x‖ ∧ ∀ i, |D x i| ≤ CD / ‖x‖ ^ 2
-
-/-- **Target (his claim).** The same equality as `Art631EnergyInField`, under Maxwell's decay
-`Ψ ~ r⁻¹`, `D ~ r⁻²` (Art. 631) and integrability, rather than compact support. A `C¹` `D`
-still excludes Art. 630's surface charges. -/
-def Art631EnergyInFieldDecay : Prop :=
-  ∀ (Ψ : Vec3 → ℝ) (D : Vec3 → Vec3), ContDiff ℝ 1 Ψ → ContDiff ℝ 1 D →
-    DecaysAsArt631 Ψ D →
-    Integrable (fun x => div D x * Ψ x) →
-    Integrable (fun x => electrostaticEnergy631 (-grad Ψ x) (D x)) →
-    (1 / 2) * ∫ x, div D x * Ψ x = ∫ x, electrostaticEnergy631 (-grad Ψ x) (D x)
-
-/-- Maxwell prints, in Art. 635 (p. 248), that `α, β, γ` (the components of `H`) are of the
-order of magnitude `r⁻³`. The companion decay `𝔄 ~ r⁻²` is ours (needed for the boundary
-term, and natural for closed currents), not a rate he prints there. -/
-def DecaysAsArt635 (A H : Vec3 → Vec3) : Prop :=
-  ∃ CA CH : ℝ, ∀ x : Vec3, x ≠ 0 →
-    (∀ i, |A x i| ≤ CA / ‖x‖ ^ 2) ∧ ∀ i, |H x i| ≤ CH / ‖x‖ ^ 3
-
-/-- **Target (his claim, plus our decay of 𝔄).** The same equality as
-`Art635ElectrokineticInField`, under Maxwell's decay `H ~ r⁻³` (Art. 635) and our `A ~ r⁻²`,
-with integrability, rather than compact support. -/
-def Art635ElectrokineticInFieldDecay : Prop :=
-  ∀ (A H : Vec3 → Vec3), ContDiff ℝ 1 A → ContDiff ℝ 1 H →
-    DecaysAsArt635 A H →
-    Integrable (fun x => A x ⬝ᵥ ((1 / fourPi) • curl H x)) →
-    Integrable (fun x => electrokineticEnergy636 (curl A x) (H x)) →
-    (1 / 2) * ∫ x, A x ⬝ᵥ ((1 / fourPi) • curl H x) =
-      ∫ x, electrokineticEnergy636 (curl A x) (H x)
-
-/-! ## Arts. 590 and 634: why 𝔄 is called a momentum (Lagrangian / generalized) -/
-
-/-- **Target.** Treatise 1873, vol. II, Art. 590, p. 214: 𝔄 "represents in direction and
-magnitude the time-integral of the electromotive force which a particle placed at the point
-`(x, y, z)` would experience if the primary current were suddenly stopped." For a body at rest
-(`velocity = 0`) with `Ψ = 0`, `∫₀^∞ emf598 0 B (∂ₜ𝔄) 0 dt = 𝔄(0)` when `𝔄 → 0` as
-`t → ∞`. This is Lagrangian / generalized momentum (Art. 604), not a field momentum density. -/
-def Art590Impulse : Prop :=
-  ∀ (A : ℝ → Vec3) (B : Vec3),
-    (∀ t, DifferentiableAt ℝ A t) →
-    Filter.Tendsto A Filter.atTop (nhds (0 : Vec3)) →
-    IntegrableOn (fun t => emf598 0 B (deriv A t) 0) (Set.Ici (0 : ℝ)) →
-      ∫ t in Set.Ici (0 : ℝ), emf598 0 B (deriv A t) 0 = A 0
+`Art590Impulse` now lives in `Maxwell.Treatise.ElectromotiveForce`, proved as `art590_impulse`
+(fundamental theorem of calculus on `[0, ∞)`). -/
 
 /-- **Shape of the Art. 634 claim.** Treatise 1873, vol. II, Art. 634, eq. (16), p. 248 (with
 Art. 578): the kinetic energy of the currents, treated as velocities of a dynamical system
@@ -128,34 +62,48 @@ def Art634KineticEnergy {ι : Type} [Fintype ι] (A J : Vec3 → Vec3) (γ γ' :
 /-- **Maxwell's construction (Art. 616, eqs. (5)–(7), p. 235), with later rigor for
 existence and regularity.** Art. 616 does not merely suppose `χ = 0`. It constructs
 `F′` as the potential of the current and `χ = (1/4π) ∭ J/r dx dy dz` (his `J = div 𝔄`,
-eq. (2), not the current), then takes `F = F′ − dχ/dx`, so that `J` vanishes, and afterwards
+eq. (2), not the current; this printed form of `χ` is the 1892 3rd edition's, per Grey's review,
+and the 1873 first-edition formulas differ), then takes `F = F′ − dχ/dx`, so that `J` vanishes, and afterwards
 "if we suppose it to be zero everywhere, `J` will also be zero everywhere." The proposition
 below is the existence of some
 `χ` making `div (𝔄 + ∇χ) = 0`; the general existence and regularity proof (beyond his integral
 formula) is later analysis. The proved theorems `art616_induction_unchanged` and
 `art616_circuitMomentum_unchanged` hold for any sufficiently smooth `χ`, which is more general
-than his specific choice. Full gauge invariance of the pair `(𝔄, Ψ)` is not his and is not
-stated. -/
+than his specific choice. `art616_gauge_iff_poisson` (`Maxwell.Treatise.VectorPotential`) proves
+that the condition is exactly `∇²χ = J` (his sign); the open part is solving that Poisson
+equation, which needs the Newtonian potential, not yet in Mathlib. Full gauge invariance of the
+pair `(𝔄, Ψ)` is not his and is not stated. -/
 def Art616GaugeChoiceAvailable : Prop :=
   ∀ A : Vec3 → Vec3, ContDiff ℝ ⊤ A → HasCompactSupport A →
     ∃ χ : Vec3 → ℝ, ContDiff ℝ 2 χ ∧ ∀ x, div (fun y => A y + grad χ y) x = 0
 
 /-- **Target (Art. 617, p. 236).** "When the distribution of electric currents is given, there
 is one, and only one, distribution of the values of 𝔄, such that 𝔄 is everywhere finite and
-continuous, and satisfies the equations `∇²𝔄 = 4πμ𝔊`, `S.∇𝔄 = 0`, and vanishes at an infinite
+continuous, and satisfies the equations `∇²𝔄 = 4πμC`, `S.∇𝔄 = 0`, and vanishes at an infinite
 distance from the electric system." Maxwell's `∇²` (his sign) acts componentwise. The source
-`𝔊` is the total current (Art. 618 table), which is solenoidal by Art. 607 (E)
-(`4π𝔊 = curl H`, so `div 𝔊 = 0`). Without that hypothesis the statement is false: if `μ ≠ 0`
-and `div G` is not identically zero, no decaying solenoidal `𝔄` exists. The scalar `μ` is
-uniform: "According to our hypothesis `a, b, c` are identical with `μα, μβ, μγ` respectively"
-(Art. 616, p. 235). Existence is the construction of Art. 616 eqs. (5)–(7); uniqueness is
-Art. 617. Smoothness, compact support, and the precise function space are later rigor. -/
+`C` (written in ASCII; a German letter in the Art. 618 table) is the total current whose
+components are `u, v, w`, the same `u, v, w` as Art. 607 (E), so `4π C = curl H` and
+`div C = 0`. (In the Art. 618 table `G` is a component of 𝔄, the Fraktur-G row is "the velocity
+of a point", and the Fraktur-J row is "the intensity of magnetization".) Without the hypothesis
+`div C = 0` the statement is false: if `μ ≠ 0` and `div C` is not identically zero, no decaying
+solenoidal `𝔄` exists. The scalar `μ` is uniform: Art. 615 retains "the coefficient μ,
+remembering that its value is unity in the electromagnetic system", and Art. 616 (p. 235):
+"According to our hypothesis `a, b, c` are identical with `μα, μβ, μγ` respectively."
+Existence is the construction of Art. 616 eqs. (5)–(7) (`𝔄 = μ ∭ C/r`; the 1873 printing of
+Art. 617 has `1/μ` in front of the integral, which is inconsistent with `∇²𝔄 = 4πμC`);
+uniqueness is Art. 617. Smoothness, compact support, and the precise function space are later
+rigor.
+
+Proved so far (`Maxwell.Treatise.VectorPotential`): `art617_difference` (two solutions differ by
+a decaying harmonic, solenoidal field) and `art617_unique_of_liouville` (uniqueness, given a
+Liouville statement for `ℝ³` that Mathlib does not yet have). Existence needs the Newtonian
+potential, also not yet in Mathlib. The Prop stays open. -/
 def Art617Uniqueness : Prop :=
-  ∀ (μ : ℝ) (G : Vec3 → Vec3), ContDiff ℝ ⊤ G → HasCompactSupport G →
-    (∀ x, div G x = 0) →
+  ∀ (μ : ℝ) (C : Vec3 → Vec3), ContDiff ℝ ⊤ C → HasCompactSupport C →
+    (∀ x, div C x = 0) →
     ∃! A : Vec3 → Vec3,
       ContDiff ℝ 2 A ∧ (∀ x, div A x = 0) ∧
-        (∀ i x, maxwellNabla2 (fun y => A y i) x = fourPi * μ * G x i) ∧
+        (∀ i x, maxwellNabla2 (fun y => A y i) x = fourPi * μ * C x i) ∧
           Filter.Tendsto A (Filter.cocompact Vec3) (nhds (0 : Vec3))
 
 /-! ## Magnetic matter: Art. 377 (empirical) versus Art. 644 (hypothesis) -/

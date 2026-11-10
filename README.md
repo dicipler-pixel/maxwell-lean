@@ -27,7 +27,7 @@ words, including steps he later dropped and limits he stated on his own theory.
 ## Fidelity rules
 
 1. Every formal statement cites the work, edition, article or section, page in the edition
-   used, and the local text file it was checked against.
+   used, and the Internet Archive identifier of the scan it was checked against.
 2. Maxwell's order is kept. Example: the magnetic force law is derived *from the stress* with
    the magnetic-matter term `m` present (Art. 643); `m = 0` enters only as the separate
    Ampère–Weber hypothesis of Art. 644 (`AmpereWeber644`), never as a default.
@@ -44,7 +44,7 @@ words, including steps he later dropped and limits he stated on his own theory.
 
 ## What is proved
 
-All with no `sorry`; `scripts/Axioms.lean` audits 64 theorems (`propext`, `Classical.choice`,
+All with no `sorry`; `scripts/Axioms.lean` audits 85 theorems (`propext`, `Classical.choice`,
 `Quot.sound` only).
 
 | Maxwell | Lean name | File |
@@ -72,29 +72,28 @@ All with no `sorry`; `scripts/Axioms.lean` audits 64 theorems (`propext`, `Class
 | Arts. 598–599: `𝔈 = 𝔊 × 𝔅 − 𝔄̇ − ∇Ψ`; motional part normal to the parallelogram, area, right-handed | `emf598`, `art598_components`, `art599_motional` | `Treatise/ElectromotiveForce.lean` |
 | Arts. 590, 604: electromagnetic momentum of a circuit = line-integral of `𝔄` | `circuitMomentum` | `Treatise/VectorPotential.lean` |
 | Arts. 598, 616: `χ` "disappears from the equations (A)" and from the circuit integral | `art616_induction_unchanged`, `art616_circuitMomentum_unchanged` | same |
+| Arts. 630–631: `½ ∭ Ψ div D = ∭ ½ E·D`, `E = −∇Ψ`, for compact support and for his decay `Ψ ~ r⁻¹`, `D ~ r⁻²` (equal totals, not location) | `art631_energyInField`, `art631_energyInFieldDecay` | `Treatise/Energy.lean` |
+| Arts. 634–635 eqs. (17)–(19): `½ ∭ 𝔄·C = (1/8π) ∭ 𝔅·H`, `𝔅 = curl 𝔄`, `4πC = curl H`, for compact support and for his `H ~ r⁻³` with our `𝔄 ~ r⁻²` | `art635_electrokineticInField`, `art635_electrokineticInFieldDecay` | same |
+| Surface term at infinity: `∫ div F = 0` for `C¹` `F = O(r⁻³)` with integrable divergence (cubes `[-n, n]³`) | `integral_div_eq_zero_of_decay` | same |
+| Art. 590: `∫₀^∞ (−∂ₜ𝔄) dt = 𝔄(0)` when `𝔄 → 0`: 𝔄 is the impulse of the EMF when the current is stopped | `art590_impulse` | `Treatise/ElectromotiveForce.lean` |
+| Art. 616: `div(𝔄 + ∇χ) = 0` iff `∇²χ = J`, his `J = div 𝔄` (the Poisson equation is not solved here) | `art616_gauge_iff_poisson`, `div_add_grad` | `Treatise/VectorPotential.lean` |
+| Art. 617, partial: two solutions differ by a decaying harmonic field; uniqueness **given** a Liouville statement for `ℝ³` | `art617_difference`, `art617_unique_of_liouville` | same |
 
 ## What is stated but not proved
 
 `Maxwell/Statements.lean` (statements only, as `Prop`s):
 
-* `Art631EnergyInField`, `Art635ElectrokineticInField` — his integrations by parts, with
-  compact support as a stepping stone. Equal totals do not locate the energy; Art. 631 itself
-  is an equal-totals claim ("will be the same if we suppose that it resides…"). Location is
-  the physical claim of 1865 § 74, the hypothesis of Art. 636, and 1873 Art. 111 ("is the seat
-  of electrical energy").
-* `Art631EnergyInFieldDecay`, `Art635ElectrokineticInFieldDecay` — the same equalities under
-  his decay rates (`Ψ ~ r⁻¹`, `D ~ r⁻²`, `H ~ r⁻³`) and, for Art. 635, our added `A ~ r⁻²`
-  (he prints only `H ~ r⁻³`). A `C¹` `D` still excludes Art. 630 surface charges.
-* `Art590Impulse` — why 𝔄 is called a momentum: the impulse of the EMF when the current is
-  stopped (Art. 590). Lagrangian / generalized (Art. 604), not a field momentum density.
-* `Art634KineticEnergy` — the shape of Art. 634's claim `T = ½ ∑ pᵢ iᵢ = ½ ∭ 𝔄·J`. The link
+* `Art634KineticEnergy` — still only the shape of Art. 634's claim `T = ½ ∑ pᵢ iᵢ = ½ ∭ 𝔄·J`. The link
   between the circuits and `J` is not yet formalized, so this is not yet a closed target.
 * `Art616GaugeChoiceAvailable` — Maxwell's construction (Art. 616 eqs. (5)–(7),
-  `χ = (1/4π)∭ J/r`, his `J = div 𝔄`, not the current); general existence and regularity
-  are later rigor.
+  `χ = (1/4π)∭ J/r`, his `J = div 𝔄`, not the current). Reduced to `∇²χ = J`
+  (`art616_gauge_iff_poisson`); solving it needs the Newtonian potential, not yet in Mathlib.
 * `Art617Uniqueness` — Art. 617: when the distribution of electric currents is given, one,
-  and only one, 𝔄 that is finite and continuous, satisfies `∇²𝔄 = 4πμ𝔊` and `div 𝔄 = 0`,
-  and vanishes at infinity, with `μ` uniform and `div 𝔊 = 0` (Art. 607 (E)).
+  and only one, 𝔄 that is finite and continuous, satisfies `∇²𝔄 = 4πμC` and `div 𝔄 = 0`,
+  and vanishes at infinity, with `C` the total current whose components are `u, v, w`
+  (Art. 607 (E), Art. 618), `μ` uniform (Art. 615) and `div C = 0`. Uniqueness is proved only
+  given a Liouville statement (`art617_unique_of_liouville`); existence needs the Newtonian
+  potential.
 * `TotalMagnetismZero377` — his empirical position (totals), distinct from Art. 644's `m = 0`.
 * `GravityMediumEnergyNonneg1865` — what the gravity analogy would require (1865 § 82), recorded
   as the dead end he called it.
@@ -106,7 +105,7 @@ All with no `sorry`; `scripts/Axioms.lean` audits 64 theorems (`propext`, `Class
 * **Art. 108 and Art. 111 in a dielectric.** Arts. 107–108 carry no `K` (they use Art. 77,
   i.e. the `K = 1` case); Art. 111
   (p. 134) asserts that a polarized dielectric "is the seat of electrical energy" and prints
-  `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²` (checked against the page image). Art. 107's
+  `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²` (checked against Internet Archive `electricandmagne01maxwrich`, page n171). Art. 107's
   `p = R²/8π` is the `K = 1` corollary, not a disagreement.
 * **Art. 640 uses `div B = 0` (Art. 403, eq. (8), p. 253) to reduce (7) to (9), which Art. 641's
   stress matches; Art. 643 sets `B = H` and keeps `div H = 4πm`.** Together these would force

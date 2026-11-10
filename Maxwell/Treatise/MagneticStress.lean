@@ -46,7 +46,7 @@ reaches `m = 0` by the Ampère–Weber hypothesis of Art. 644, not by combining 
 `B = H`. The formalization therefore keeps the two routes apart: `art641_force` has Art. 403
 as an explicit hypothesis; `art643_force` does not assume it. See `art643_m_eq_zero_of_art403`.
 
-Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt` (1873, vol. II).
+Source: Internet Archive `electricandmagne02maxwrich` (1873, vol. II).
 -/
 
 namespace Maxwell

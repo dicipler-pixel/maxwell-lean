@@ -2,6 +2,7 @@
 Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE).
 -/
 import Maxwell.Basic
+import Mathlib.MeasureTheory.Integral.IntegralEqImproper
 
 /-!
 # Electromotive force on a moving element (Treatise 1873, vol. II, Arts. 598–599)
@@ -27,7 +28,7 @@ right-handed cyclical order."
 This is the electromotive *intensity* at a point of a moving body. It is not yet the later
 Heaviside–Lorentz force law on a point charge `q(E + v × B)`; nothing here asserts that law.
 
-Local source: `/workspace/maxwell_reread/n_electricandmagne02maxwrich.txt`.
+Source: Internet Archive `electricandmagne02maxwrich` (1873, vol. II).
 -/
 
 namespace Maxwell
@@ -60,5 +61,32 @@ theorem art599_motional (v B : Vec3) :
     rw [← triple_product_eq_det, triple_product_permutation, triple_product_permutation, sq]
   refine ⟨dot_self_cross v B, dot_cross_self v B, ?_, hdet, hdet ▸ sq_nonneg' _⟩
   simp only [sq, cross_dot_cross]; rw [dotProduct_comm B v]; ring
+
+/-! ## Art. 590: 𝔄 as the impulse of the electromotive force -/
+
+open MeasureTheory in
+/-- **Target.** Treatise 1873, vol. II, Art. 590, p. 214: 𝔄 "represents in direction and
+magnitude the time-integral of the electromotive force which a particle placed at the point
+`(x, y, z)` would experience if the primary current were suddenly stopped." For a body at rest
+(`velocity = 0`) with `Ψ = 0`, `∫₀^∞ emf598 0 B (∂ₜ𝔄) 0 dt = 𝔄(0)` when `𝔄 → 0` as
+`t → ∞`. This is Lagrangian / generalized momentum (Art. 604), not a field momentum density. Proved below as `art590_impulse`. -/
+def Art590Impulse : Prop :=
+  ∀ (A : ℝ → Vec3) (B : Vec3),
+    (∀ t, DifferentiableAt ℝ A t) →
+    Filter.Tendsto A Filter.atTop (nhds (0 : Vec3)) →
+    IntegrableOn (fun t => emf598 0 B (deriv A t) 0) (Set.Ici (0 : ℝ)) →
+      ∫ t in Set.Ici (0 : ℝ), emf598 0 B (deriv A t) 0 = A 0
+
+open MeasureTheory in
+/-- **Art. 590.** With `velocity = 0` and `Ψ = 0`, `emf598 = −∂ₜ𝔄`, and
+`∫₀^∞ −𝔄′ = 𝔄(0) − lim 𝔄 = 𝔄(0)` (`integral_Ioi_of_hasDerivAt_of_tendsto'`). -/
+theorem art590_impulse : Art590Impulse := by
+  intro A B hA hlim hint
+  have he : ∀ t, emf598 0 B (deriv A t) 0 = - deriv A t := fun t => by simp [emf598]
+  simp_rw [he] at hint ⊢
+  rw [integral_neg, integral_Ici_eq_integral_Ioi,
+    integral_Ioi_of_hasDerivAt_of_tendsto' (fun t _ => (hA t).hasDerivAt)
+      (by simpa using hint.neg.mono_set Set.Ioi_subset_Ici_self) hlim]
+  simp
 
 end Maxwell
