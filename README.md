@@ -120,7 +120,8 @@ Public-domain scans (archive.org OCR): *Treatise*, 1st ed. 1873, vols. I–II
 ## Credits
 
 Formalization by Jeromie Beasley, drafted with AI assistance (Lean Green PR Machine, a Grok Bot
-agent, with fidelity review by Grey and Lean review by ink). Jeromie Beasley's own papers were used
+agent, following fidelity constraints from Grey and an architecture plan from ink; their review of
+this pass is pending). Jeromie Beasley's own papers were used
 only as a lens for reading Maxwell, never as a source for any statement here; see
 `NOTES-resemblances.md`.
 
