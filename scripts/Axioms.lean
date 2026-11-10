@@ -1,0 +1,59 @@
+import Maxwell
+
+/-! Axiom audit. Every proved result must depend only on `propext`, `Classical.choice` and
+`Quot.sound`. `scripts/check_axioms.sh` fails if anything else (e.g. `sorryAx`) appears. -/
+
+#print axioms Maxwell.sq_eq
+#print axioms Maxwell.sq_nonneg'
+#print axioms Maxwell.pd_mul
+#print axioms Maxwell.pd_add
+#print axioms Maxwell.pd_sub
+#print axioms Maxwell.pd_const_mul
+#print axioms Maxwell.pd_neg
+#print axioms Maxwell.pd_const
+#print axioms Maxwell.differentiableAt_fderiv_of_contDiffAt
+#print axioms Maxwell.differentiableAt_pd
+#print axioms Maxwell.pd_pd
+#print axioms Maxwell.pd_pd_comm
+#print axioms Maxwell.art598_components
+#print axioms Maxwell.art599_motional
+#print axioms Maxwell.sum_frame_eq_delta
+#print axioms Maxwell.art108_superposition
+#print axioms Maxwell.art108_components
+#print axioms Maxwell.componentForm_xx_xy
+#print axioms Maxwell.pd_componentForm
+#print axioms Maxwell.stressForce_componentForm
+#print axioms Maxwell.art108_force
+#print axioms Maxwell.stress1881_eq_componentForm_neg_grad
+#print axioms Maxwell.curl_grad_eq_zero
+#print axioms Maxwell.art105_force
+#print axioms Maxwell.componentForm_transpose
+#print axioms Maxwell.traction_componentForm
+#print axioms Maxwell.art106_tension
+#print axioms Maxwell.art106_pressure
+#print axioms Maxwell.art106_principal
+#print axioms Maxwell.art111_energy_eq_tension
+#print axioms Maxwell.energy_isotropic
+#print axioms Maxwell.art641_components
+#print axioms Maxwell.art641_couple
+#print axioms Maxwell.art639_couple
+#print axioms Maxwell.art641_symm_iff
+#print axioms Maxwell.art642_parallel
+#print axioms Maxwell.art642_bisector
+#print axioms Maxwell.art643_unmagnetized
+#print axioms Maxwell.art643_tension_pressure
+#print axioms Maxwell.art643_force
+#print axioms Maxwell.art643_force_components
+#print axioms Maxwell.art644_force
+#print axioms Maxwell.pd_magneticStress641
+#print axioms Maxwell.art641_force
+#print axioms Maxwell.normalStress_tensionWithLateralPressure
+#print axioms Maxwell.normalStress_add
+#print axioms Maxwell.art792_radiation_pressure
+#print axioms Maxwell.art792_radiation_pressure_components
+#print axioms Maxwell.art642_normalStress_transverse
+#print axioms Maxwell.art642_vs_art792
+#print axioms Maxwell.fderiv_apply_eq_grad_dot
+#print axioms Maxwell.art616_induction_unchanged
+#print axioms Maxwell.loop_integral_grad
+#print axioms Maxwell.art616_circuitMomentum_unchanged

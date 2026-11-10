@@ -1,0 +1,80 @@
+# Build every module, replay every proof in the independent kernel checker, refuse any
+# placeholder proof, and audit the axioms of every named theorem.
+# A green badge means all four passed on the exact commit shown.
+name: Lean proof check
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Free disk space (the full Mathlib cache is several GB)
+        run: |
+          set -euo pipefail
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h /
+
+      - name: Install the pinned Lean toolchain
+        run: |
+          set -euo pipefail
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -o "$RUNNER_TEMP/elan-init.sh"
+          bash "$RUNNER_TEMP/elan-init.sh" -y --default-toolchain "$(cat lean-toolchain)"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Fetch the prebuilt Mathlib cache for the pinned commit
+        run: |
+          set -euo pipefail
+          lean --version
+          lake exe cache get
+
+      - name: No placeholder proofs
+        run: |
+          set -euo pipefail
+          if grep -rnwE 'sorry|admit|native_decide' Maxwell Maxwell.lean; then
+            echo "::error::placeholder proof or native_decide found"; exit 1
+          fi
+          if grep -rnE '^\s*axiom\s' Maxwell Maxwell.lean; then
+            echo "::error::new axiom declared"; exit 1
+          fi
+
+      - name: Build every module
+        run: |
+          set -euo pipefail
+          lake build 2>&1 | tee build.log
+          if grep -q "declaration uses 'sorry'" build.log; then
+            echo "::error::a declaration uses sorry"; exit 1
+          fi
+
+      - name: Replay every module in the independent kernel checker
+        run: |
+          set -euo pipefail
+          for m in Basic Sources Treatise.ElectrostaticStress Treatise.MagneticStress Treatise.Energy Treatise.RadiationPressure Treatise.ElectromotiveForce Treatise.VectorPotential Statements; do
+            echo "== Maxwell.$m"
+            lake env leanchecker "Maxwell.$m"
+          done
+
+      - name: Axiom audit
+        run: ./scripts/check_axioms.sh
+
+      - name: Keep the build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-evidence
+          path: |
+            build.log
+            lake-manifest.json
+          if-no-files-found: warn
+          retention-days: 90
