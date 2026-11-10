@@ -8,3 +8,8 @@ import Maxwell.Treatise.Energy
 import Maxwell.Treatise.RadiationPressure
 import Maxwell.Treatise.ElectromotiveForce
 import Maxwell.Treatise.VectorPotential
+import Maxwell.Treatise.CircuitFlux
+import Maxwell.Treatise.BoxComplex
+import Maxwell.Treatise.GaugeLinearFunctional
+import Maxwell.Treatise.NewtonianPotential
+import Maxwell.Treatise.NewtonianPotentialC1

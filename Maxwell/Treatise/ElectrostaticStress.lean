@@ -2,6 +2,7 @@
 Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE).
 -/
 import Maxwell.Basic
+import Mathlib.LinearAlgebra.Matrix.DotProduct
 import Mathlib.MeasureTheory.Integral.DivergenceTheorem
 
 /-!
@@ -370,5 +371,142 @@ i.e. the `K = 1` case), so Art. 111's `p = (1/8π) K 𝔈²` becomes `p = R²/8�
 theorem art107_tension_of_art111 (R : Vec3) :
     (1 / 2) * (((1 / fourPi) • R) ⬝ᵥ R) = sq R / (8 * Real.pi) := by
   simpa using (art111_energy_eq_tension (K := 1) one_ne_zero R).1
+
+
+/-! ## Art. 111 in a dielectric: the stress the tension belongs to
+
+Art. 111 prints `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`; that is a *number*. The stress of a
+dielectric of capacity `K` is `dielectricStress K E` below, whose tension along `E` is that number
+for every `K`, and whose force is `(div 𝔇) • 𝔈` with `𝔇 = (K/4π) 𝔈`. Arts. 107–108 are the case
+`K = 1` (`dielectricStress_one`, `componentForm`), which is the case Art. 77 gives (`4πρ = div E`).
+-/
+
+/-- **Art. 111's identity for every `K`.** The printed formula holds for `K = 0` as well, both
+sides being `0` under Lean's total division, so `art111_energy_eq_tension`'s `K ≠ 0` is a
+hypothesis about what the formula *means*, not about the identity. -/
+theorem art111_energy_eq_tension_all (K : ℝ) (R : Vec3) :
+    (1 / 2) * (((K / fourPi) • R) ⬝ᵥ R) = K * sq R / (8 * Real.pi) ∧
+    (1 / 2) * (((K / fourPi) • R) ⬝ᵥ R) = (2 * Real.pi / K) * sq ((K / fourPi) • R) := by
+  rcases eq_or_ne K 0 with hK | hK
+  · subst hK; simp
+  · exact art111_energy_eq_tension K hK R
+
+/-- The electrostatic stress of a dielectric of capacity `K` (Art. 111): tension `p = K E²/8π`
+along `E` with equal lateral pressure, `p_hk = K E_h E_k/4π − δ_hk K E²/8π`. -/
+noncomputable def dielectricStress (K : ℝ) (E : Vec3) : Stress :=
+  fun h k => K * (E h * E k) / fourPi - δ h k * (K * sq E) / (8 * Real.pi)
+
+theorem dielectricStress_eq_smul (K : ℝ) (E : Vec3) :
+    dielectricStress K E = K • componentForm E := by
+  ext h k
+  simp only [dielectricStress, componentForm, Matrix.smul_apply, smul_eq_mul]
+  ring
+
+/-- `K = 1` is `componentForm`, the stress of Arts. 107–108. -/
+theorem dielectricStress_one (E : Vec3) : dielectricStress 1 E = componentForm E := by
+  rw [dielectricStress_eq_smul, one_smul]
+
+theorem stressForce_const_smul {P : Vec3 → Stress} {x : Vec3} (c : ℝ)
+    (hP : ∀ h k, DifferentiableAt ℝ (fun y => P y h k) x) :
+    stressForce (fun y => c • P y) x = c • stressForce P x := by
+  ext k
+  simp only [stressForce, Matrix.smul_apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun h _ => pd_const_mul h c (hP h k)
+
+theorem div_const_smul {F : Vec3 → Vec3} {x : Vec3} (c : ℝ)
+    (hF : ∀ i, DifferentiableAt ℝ (fun y => F y i) x) :
+    div (fun y => c • F y) x = c * div F x := by
+  simp only [div, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun i _ => pd_const_mul i c (hF i)
+
+theorem traction_smul (c : ℝ) (P : Stress) (n : Vec3) :
+    traction (c • P) n = c • traction P n := by
+  ext k
+  simp only [traction, Matrix.smul_apply, Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun h _ => by ring
+
+theorem sq_smul_unit (r : ℝ) {u : Vec3} (hu : u ⬝ᵥ u = 1) : sq (r • u) = r ^ 2 := by
+  simp only [sq, dotProduct_smul, smul_dotProduct, hu, smul_eq_mul, mul_one]
+  ring
+
+theorem differentiableAt_componentForm {F : Vec3 → Vec3} {x : Vec3}
+    (hF : ∀ i, DifferentiableAt ℝ (fun y => F y i) x) (h k : Fin 3) :
+    DifferentiableAt ℝ (fun y => componentForm (F y) h k) x := by
+  simp only [componentForm, sq_eq]
+  have := hF 0; have := hF 1; have := hF 2; have := hF h; have := hF k
+  fun_prop
+
+/-- **Art. 111 against Art. 107**, for every capacity: along `E = r u` the tension of
+`dielectricStress K` is `½𝔇𝔈 = K r²/8π`, the energy per unit volume — the energy *is* the tension
+on unit area, as Art. 111 asserts. -/
+theorem dielectricStress_traction (K r : ℝ) {u : Vec3} (hu : u ⬝ᵥ u = 1) :
+    traction (dielectricStress K (r • u)) u
+      = ((1 / 2) * (((K / fourPi) • (r • u)) ⬝ᵥ (r • u))) • u := by
+  have hsq := sq_smul_unit r hu
+  have hdot : (r • u) ⬝ᵥ u = r := by simp [dotProduct_smul, hu]
+  rw [dielectricStress_eq_smul, traction_smul, traction_componentForm, hdot,
+    (art111_energy_eq_tension_all K (r • u)).1, hsq]
+  ext k
+  simp only [Pi.smul_apply, Pi.sub_apply, smul_eq_mul]
+  field_simp
+  ring
+
+/-- **Across the field, for every capacity**: the pressure of `dielectricStress K` across a plane
+at right angles to `E` is `K E²/8π`, of the same magnitude as the tension along `E`. -/
+theorem dielectricStress_pressure {K : ℝ} {E n : Vec3} (hEn : E ⬝ᵥ n = 0) :
+    traction (dielectricStress K E) n = -(K * sq E / (8 * Real.pi)) • n := by
+  rw [dielectricStress_eq_smul, traction_smul, art106_pressure hEn]
+  ext k
+  simp only [Pi.smul_apply, Pi.neg_apply, smul_eq_mul]
+  ring
+
+/-- **Art. 107 from Art. 111, for every capacity `K`**: along `E = r u` a tension equal to the
+energy per unit volume `½𝔇𝔈 = K r²/8π`, and across `E` a pressure of the same magnitude. -/
+theorem dielectricStress_art107 (K r : ℝ) {u : Vec3} (hu : u ⬝ᵥ u = 1) :
+    traction (dielectricStress K (r • u)) u
+        = ((1 / 2) * (((K / fourPi) • (r • u)) ⬝ᵥ (r • u))) • u ∧
+      ∀ n : Vec3, n ⬝ᵥ u = 0 →
+        traction (dielectricStress K (r • u)) n
+          = -((1 / 2) * (((K / fourPi) • (r • u)) ⬝ᵥ (r • u))) • n := by
+  refine ⟨dielectricStress_traction K r hu, fun n hn => ?_⟩
+  have hn' : (r • u) ⬝ᵥ n = 0 := by
+    simp only [smul_dotProduct, smul_eq_mul]
+    rw [dotProduct_comm u n, hn, mul_zero]
+  rw [dielectricStress_pressure (K := K) (E := r • u) (n := n) hn',
+    (art111_energy_eq_tension_all K (r • u)).1, neg_smul]
+
+/-- **Art. 111's stress gives the force `(div 𝔇) • 𝔈`** for a curl-free electromotive intensity
+and `𝔇 = (K/4π) • 𝔈`. With `K = 1` and `4πρ = div E` this is Art. 108's `ρ • E`. -/
+theorem stressForce_dielectricStress {E : Vec3 → Vec3} {x : Vec3} {K : ℝ}
+    (hE : ∀ i, DifferentiableAt ℝ (fun y => E y i) x) (hcurl : curl E x = 0) :
+    stressForce (fun y => dielectricStress K (E y)) x
+      = (div (fun y => (K / fourPi) • E y) x) • E x := by
+  have hzero : crossProduct (curl E x) (E x) = 0 := by
+    rw [hcurl]; ext i; fin_cases i <;> simp [cross_apply]
+  have hfun : (fun y : Vec3 => dielectricStress K (E y)) = fun y => K • componentForm (E y) := by
+    funext y; exact dielectricStress_eq_smul K (E y)
+  rw [hfun, stressForce_const_smul K (fun h k => differentiableAt_componentForm hE h k),
+    stressForce_componentForm hE, hzero, smul_zero, add_zero, div_const_smul (K / fourPi) hE]
+  ext k
+  simp only [Pi.smul_apply, smul_eq_mul]
+  ring
+
+/-- **Art. 111/108 in a dielectric:** if `div 𝔇 = ρ` with `𝔇 = (K/4π) • 𝔈`, the Art. 111 stress
+exerts the force `ρ • 𝔈` per unit volume. -/
+theorem art111_force_dielectric {E : Vec3 → Vec3} {x : Vec3} {K ρ : ℝ}
+    (hE : ∀ i, DifferentiableAt ℝ (fun y => E y i) x) (hcurl : curl E x = 0)
+    (hD : div (fun y => (K / fourPi) • E y) x = ρ) :
+    stressForce (fun y => dielectricStress K (E y)) x = ρ • E x := by
+  rw [stressForce_dielectricStress hE hcurl, hD]
+
+/-- **`K = 1` recovers Art. 108's `art108_force`**, with the same `dielectricStress` object. -/
+theorem dielectricStress_K_one_force {E : Vec3 → Vec3} {x : Vec3} {ρ : ℝ}
+    (hE : ∀ i, DifferentiableAt ℝ (fun y => E y i) x) (hcurl : curl E x = 0)
+    (h77 : div E x = fourPi * ρ) :
+    stressForce (fun y => dielectricStress 1 (E y)) x = ρ • E x := by
+  have hD : div (fun y => (1 / fourPi) • E y) x = ρ := by
+    rw [div_const_smul (1 / fourPi) hE, h77]
+    field_simp
+  rw [art111_force_dielectric hE hcurl hD]
 
 end Maxwell

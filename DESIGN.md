@@ -25,8 +25,8 @@ divergence theorem on boxes). The Hodge-star module is avoided while it still ha
 |---|---|---|
 | Electrostatic tension `p` along `R` with equal lateral pressure, `R² = 8πp`; superposition; components; force `ρR` | 1873 I, Arts. 107–108 | proved |
 | Faraday's statement of the same distribution | 1873 I, Art. 109 | cited only |
-| Energy per unit volume = tension = `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`; a polarized dielectric "is the seat of electrical energy" | 1873 I, Art. 111, p. 134 | printed formula proved (page image); Art. 107 is the `K = 1` corollary; location and limit recorded |
-| Potential `Ψ`, components (14), direct-action surface-integral test | 1881 I, Arts. 103–105 | pointwise proved; integrated form proved on boxes (`art105_directAction`); "any closed surface" not formalized |
+| Energy per unit volume = tension = `p = ½ 𝔇 𝔈 = (1/8π) K 𝔈² = (2π/K) 𝔇²`; a polarized dielectric "is the seat of electrical energy" | 1873 I, Art. 111, p. 134 | printed formula proved (page image); the stress carrying it for every `K` (`dielectricStress`), force `(div 𝔇)·𝔈`; Art. 107 is the `K = 1` corollary; location and limit recorded |
+| Potential `Ψ`, components (14), direct-action surface-integral test | 1881 I, Arts. 103–105 | pointwise proved; integrated form proved on boxes (`art105_directAction`) and on polycubes with holes, with `Ψ` only `C²` on the region (`Treatise/BoxComplex.lean`); curved "any closed surface" not formalized |
 | Type of the stress: two principal stresses equal, third reversed | 1881 I, Art. 106 | proved |
 | Force and couple on magnetized element with current | 1873 II, Arts. 639–640 | proved (as the target of Art. 641) |
 | Non-symmetric magnetic stress, couple `B × H/4π` | 1873 II, Art. 641 | proved |
@@ -36,9 +36,9 @@ divergence theorem on boxes). The Hodge-star module is avoided while it still ha
 | No account of how the stress is maintained; superposition of stresses | 1873 II, Art. 645 | limit recorded (including "unfruitful"); superposition defined (`stress645`) and its force proved as his hypothesis |
 | Energy split: electric potential `½E·D`, magnetic kinetic `B·H/8π`; Art. 631 is equal totals ("if we suppose"), not a location claim | 1873 II, Arts. 630–636 | densities defined; integrals stated (compact-support and decay-rate targets) |
 | Energy "literally" in the field | 1865 § 74 (with § 73 "illustrative, not explanatory"); also Art. 636 (hypothesis) and 1873 Art. 111 ("seat of electrical energy") | recorded claims (physical) |
-| Electromagnetic momentum = vector potential; circuit line-integral | 1873 II, Arts. 590, 604; 1865 §§ 57–58 | defined |
+| Electromagnetic momentum = vector potential; circuit line-integral | 1873 II, Arts. 590, 604; 1865 §§ 57–58 | defined; circulation = induction flux on rectangles (`Treatise/CircuitFlux.lean`), and the momentum of a rectangular circuit is the flux (field side of Art. 634); the current side needs a distributional current |
 | `v × B` in the electromotive intensity at a moving point | 1873 II, Arts. 598–599 | proved (geometry) |
-| `χ` disappears; constructed as `(1/4π)∭ J/r` (his `J = div 𝔄`, not the current) then set to zero | 1873 II, Arts. 616–617 | proved (invariance, more general than his specific `χ`); uniqueness stated under uniform `μ` and `div 𝔊 = 0` (Art. 607 (E)) |
+| `χ` disappears; constructed as `(1/4π)∭ J/r` (his `J = div 𝔄`, not the current) then set to zero | 1873 II, Arts. 616–617 | invariance proved (more general than his `χ`); gauge choice equivalent to one Poisson lemma (`Statements.lean`), solved in closed form for profile sources (`Treatise/GaugeLinearFunctional.lean`); **uniqueness of Art. 617 proved** (`liouville_maxwellNabla2`), existence reduced to one named singular-integral lemma (`Treatise/NewtonianPotential.lean`) |
 | Momentum is not that of the electricity; null experiments | 1873 II, Arts. 549, 574–575 | recorded |
 | Radiation pressure = energy per unit volume, from the stresses | 1873 II, Art. 792 | proved, with two sharpenings |
 | A medium for energy in transit (no flux vector) | 1873 II, Art. 866 | recorded |
@@ -66,10 +66,7 @@ comparison it goes in a separate, labelled "later" module.
    `Art635ElectrokineticInField` / `Art635ElectrokineticInFieldDecay` (integration by parts).~~
    Done, both compact-support and decay versions (`art631_energyInField`,
    `art631_energyInFieldDecay`, `art635_electrokineticInField`,
-   `art635_electrokineticInFieldDecay`, via `integral_div_eq_zero_of_decay` on cubes). Still
-   open nearby: `Art616GaugeChoiceAvailable` and the existence half of `Art617Uniqueness`
-   (Newtonian potential), the uniqueness half (Liouville on `ℝ³`), and `Art634KineticEnergy`
-   (shape only).
+   `art635_electrokineticInFieldDecay`, via `integral_div_eq_zero_of_decay` on cubes).
 3. Read Faraday's Lines, Physical Lines, and the 1865 paper in full before writing
    `FaradayLines.lean`, `PhysicalLines.lean`, `DynamicalTheory.lean`.
 4. Treatise vol. II ch. IX general equations (Arts. 604–619) with `K`, `μ`, conductivity.
@@ -81,3 +78,20 @@ comparison it goes in a separate, labelled "later" module.
    Done: 1873 vol. II p. 257 (Internet Archive `electricandmagne02maxwrich`) labels the
    force law "(Equations of Electromagnetic Force.) (20)". Art. 644's
    `dα/dx + dβ/dy + dγ/dz = 0` is (21); the reduced force is (22).
+7. ~~The uniqueness half of `Art617Uniqueness` — Liouville on `ℝ³`.~~
+   Done (`liouville_maxwellNabla2`, `art617_solution_subsingleton`); uniqueness needs no hypothesis
+   on the current. `art617Uniqueness_of_exists` now reduces the target to existence.
+8. ~~`Art105DirectAction` beyond one box, and `dielectricStress` for `K ≠ 1`.~~
+   Done: `Treatise/BoxComplex.lean` (unions, cut-outs, polycubes; `C²` only on the region) and
+   `dielectricStress` in `ElectrostaticStress.lean`.
+9. ~~The field side of `Art634KineticEnergy`.~~
+   Done for rectangles (`Treatise/CircuitFlux.lean`). The `Art634KineticEnergy` of `Statements` is
+   *refutable* as stated (`art634_shape_needs_wire_hypothesis`); closing it needs the wire
+   hypothesis, i.e. a distributional current or a thin-wire limit — neither is in Mathlib.
+10. Open: the exactness half of `Art616GaugeChoiceAvailable` and the existence half of
+    `Art617Uniqueness` — one singular integral. What is left is named in
+    `Treatise/NewtonianPotentialC1.lean`: `TruncatedKernelIntegrable`, the differentiation under the
+    integral (`hasFDerivAt_integral_of_dominated_of_fderiv_le`), and the `ε`-shell limit
+    (`NewtonianPotentialShellLimit`), whose only hard ingredient is the cube-face integral
+    `6∫∫_{[-1,1]²}(1+u²+v²)^{-3/2} = 4π`. Curved surfaces for Art. 105 need a surface measure
+    Mathlib does not have.

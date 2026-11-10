@@ -3,18 +3,27 @@ Copyright (c) 2026 Jeromie Beasley. Released under the MIT license (see LICENSE)
 -/
 import Maxwell.Treatise.RadiationPressure
 import Maxwell.Treatise.VectorPotential
+import Maxwell.Treatise.GaugeLinearFunctional
 import Maxwell.Treatise.ElectromotiveForce
 import Maxwell.Sources
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Constructions.Pi
 
 /-!
-# Statements only
+# Statements, and what is proved about them
 
-Everything in this file is a `Prop` (a statement) or a definition used to write one. **Nothing
-here is proved, and nothing here is assumed as an axiom.** The root module `Maxwell` does not
-import this file. Each statement says whether it is a claim of Maxwell's that should be provable
-(a target), one that needs a sharpened hypothesis to be true, or a hypothesis of his.
+The `Prop`s below are targets: claims of Maxwell's that should be provable, claims that need a
+sharpened hypothesis to be true, or hypotheses of his. **None of them is assumed as an axiom.**
+The root module `Maxwell` does not import this file.
+
+Four things here *are* proved, about the statements themselves rather than in them:
+
+* `art634_shape_needs_wire_hypothesis` — `Art634KineticEnergy` is refuted as stated: it relates two
+  sides over independent data, so it needs the wire hypothesis ("the loops carry the current `J`").
+* `art617Uniqueness_of_exists` — `Art617Uniqueness` follows from its existence half alone.
+* `art616GaugeChoiceAvailable_of_poissonSolver` and `poisson_solvable_of_gaugeChoiceAvailable` —
+  `Art616GaugeChoiceAvailable` is equivalent to one named lemma on the Poisson equation.
+* the remaining statements carry the sharpest hypotheses their claims are known to need.
 
 Maxwell's own stated limits (1873 Arts. 107, 110, 111, 645; 1865 §§ 73, 82; 1881 Art. 105) are not turned into statements of any
 kind: there is no mathematical content to state, and they are kept verbatim in `Maxwell.Sources`.
@@ -126,5 +135,91 @@ undisturbed energy `C ≥ R²/8π` everywhere. He concludes: "I cannot go any fu
 direction in searching for the cause of gravitation" (`Maxwell.Sources.dyn1865_s82`). -/
 def GravityMediumEnergyNonneg1865 (C : ℝ) (R : Vec3 → Vec3) : Prop :=
   ∀ x, 0 ≤ C - sq (R x) / (8 * Real.pi)
+/-! ## Art. 634 as stated in `Maxwell.Statements` needs the wire hypothesis
+
+`Maxwell.Statements.Art634KineticEnergy` relates two sides over *independent* data: the left side
+depends only on `𝔄`, the loops `γᵢ` and the currents `iᵢ`; the right side only on `𝔄` and `J`.
+Nothing in the statement says that `J` is the current distribution carried by the circuits `γᵢ`.
+Without that link the equation is false, as the next theorem shows: a constant potential, zero
+current density and a straight (open) path with unit current give `½` against `0`.
+
+This is why Art. 634 cannot be closed from the hypotheses it is stated with: the missing
+hypothesis is exactly "the loops `γᵢ` carry the current `J`", i.e. `J` is the (distributional)
+sum `∑ iᵢ ∮_γᵢ δ`. -/
+
+theorem axis_dot_axis_self (i : Fin 3) : axis i ⬝ᵥ axis i = 1 := by
+  fin_cases i <;> simp [axis, dotProduct, Fin.sum_univ_three]
+
+/-- **Art. 634's equation is refutable as stated.**  With `𝔄 = e₀` constant, the open path
+`γ t = t e₀` and unit current, the momentum side is `½`, while with `J = 0` the current-density
+side is `0`. -/
+theorem art634_shape_needs_wire_hypothesis :
+    ¬ Art634KineticEnergy (fun _ : Vec3 => axis 0) (fun _ => 0)
+      (fun (_ : Unit) (t : ℝ) => t • axis 0) (fun (_ : Unit) (_ : ℝ) => axis 0)
+      (fun (_ : Unit) => 1) := by
+  have hcm : circuitMomentum (fun _ : Vec3 => axis 0) (fun t : ℝ => t • axis 0)
+      (fun _ : ℝ => axis 0) = 1 := by
+    simp [circuitMomentum, axis_dot_axis_self]
+  intro h
+  simp only [Art634KineticEnergy] at h
+  have hJ : (∫ x : Vec3, (fun _ : Vec3 => axis 0) x ⬝ᵥ (fun _ => 0 : Vec3 → Vec3) x) = 0 := by
+    simp
+  rw [hJ, mul_zero] at h
+  simp [hcm] at h
+
+
+/-! ## Art. 617 uniqueness, given existence
+
+`art617_solution_subsingleton` (`Maxwell.Treatise.VectorPotential`) makes uniqueness independent of
+any smoothness of the current, so the open target reduces to constructing one solution. -/
+
+/-- **`Art617Uniqueness` from the existence half alone.** Given, for every smooth compactly
+supported solenoidal current `C`, one decaying solenoidal `𝔄` with `∇²𝔄 = 4πμC` componentwise, the
+`∃!` of Art. 617 follows. -/
+theorem art617Uniqueness_of_exists
+    (hex : ∀ (μ : ℝ) (C : Vec3 → Vec3), ContDiff ℝ ⊤ C → HasCompactSupport C →
+      (∀ x, div C x = 0) → ∃ A : Vec3 → Vec3,
+        ContDiff ℝ 2 A ∧ (∀ x, div A x = 0) ∧
+          (∀ i x, maxwellNabla2 (fun y => A y i) x = fourPi * μ * C x i) ∧
+            Filter.Tendsto A (Filter.cocompact Vec3) (nhds (0 : Vec3))) :
+    Art617Uniqueness := by
+  intro μ C _ _ hdiv
+  obtain ⟨A, hA⟩ := hex μ C ‹ContDiff ℝ ⊤ C› ‹HasCompactSupport C› hdiv
+  exact ⟨A, hA, fun B hB => art617_solution_subsingleton μ C hB hA⟩
+
+
+/-! ## Art. 616: the gauge choice is exactly Poisson solvability
+
+`art616_gauge_iff_poisson` turned the gauge condition into `∇²χ = div 𝔄`. These two theorems turn
+that into an equivalence of the open target with one named lemma on the Newtonian potential. -/
+
+section Gauge
+
+open Filter Topology in
+/-- **Art. 616 reduced to the exact missing lemma.** If Poisson's equation `∇²χ = J` is solvable
+for every smooth compactly supported `J` (the Newtonian potential), then Maxwell's gauge choice is
+available for every smooth compactly supported `𝔄`. -/
+theorem art616GaugeChoiceAvailable_of_poissonSolver (h : NewtonianPotentialSolver) :
+    Art616GaugeChoiceAvailable := by
+  intro A hA hAc
+  obtain ⟨χ, hχ, hP⟩ := h (div A) (contDiff_div hA) (hasCompactSupport_div hAc)
+  refine ⟨χ, hχ, ?_⟩
+  exact (art616_gauge_iff_poisson
+    (fun i => (contDiff_pi.1 hA i).differentiable (by simp)) hχ).mpr hP
+
+/-- **The converse reduction.** If Maxwell's gauge choice is available (the target
+`Art616GaugeChoiceAvailable`), then Poisson's equation `∇²χ = J` is solvable for every `J` that is
+the divergence of a smooth compactly supported field. Together with
+`art616GaugeChoiceAvailable_of_poissonSolver` this pins the open target exactly to Poisson
+solvability on the image of `div`. -/
+theorem poisson_solvable_of_gaugeChoiceAvailable (h : Art616GaugeChoiceAvailable)
+    {A : Vec3 → Vec3} (hA : ContDiff ℝ ⊤ A) (hAc : HasCompactSupport A) :
+    ∃ χ : Vec3 → ℝ, ContDiff ℝ 2 χ ∧ ∀ x, maxwellNabla2 χ x = div A x := by
+  obtain ⟨χ, hχ, h0⟩ := h A hA hAc
+  exact ⟨χ, hχ, (art616_gauge_iff_poisson
+    (fun i => (contDiff_pi.1 hA i).differentiable (by simp)) hχ).mp h0⟩
+
+
+end Gauge
 
 end Maxwell

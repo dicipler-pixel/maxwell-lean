@@ -249,13 +249,6 @@ theorem stressForce_add {P Q : Vec3 → Stress} {x : Vec3}
   rw [← Finset.sum_add_distrib]
   exact Finset.sum_congr rfl fun h _ => pd_add h (hP h k) (hQ h k)
 
-theorem differentiableAt_componentForm {F : Vec3 → Vec3} {x : Vec3}
-    (hF : ∀ i, DifferentiableAt ℝ (fun y => F y i) x) (h k : Fin 3) :
-    DifferentiableAt ℝ (fun y => componentForm (F y) h k) x := by
-  simp only [componentForm, sq_eq]
-  have := hF 0; have := hF 1; have := hF 2; have := hF h; have := hF k
-  fun_prop
-
 theorem differentiableAt_magneticStress641 {B H : Vec3 → Vec3} {x : Vec3}
     (hB : ∀ i, DifferentiableAt ℝ (fun y => B y i) x)
     (hH : ∀ i, DifferentiableAt ℝ (fun y => H y i) x) (h k : Fin 3) :
